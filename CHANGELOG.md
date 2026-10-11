@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.10-v8 - release, 2026-10-11
+
+- Install and upgrade using a single ZIP through FrSky Suite Lua library or manual copying.
+- Show the installed version and release information in Suite.
+- Keep the background still while the Home menus are open, including during touch scrolling, with a 30-second limit. Telemetry, alerts and flight logging continue.
+- Keep five Home-menu choices; open Diagnostics from the bottom-right button in Flight log, including before a flight has been logged.
+- Return from Flight log and Diagnostics to Dashboard with RTN.
+- Reduce drawing work and update the illustrated guides for the menus and installation.
+- Settings and flight-count formats are unchanged.
+
 ## 2026.10-v7 - release, 2026-10-10
 
 - Allow up to 0.20 V variation across the whole pack during the 10-second battery check, accommodating stepped ESC telemetry.

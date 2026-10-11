@@ -2,13 +2,26 @@
 
 [Hjem](../README.md) | [Installasjon](VoltDeck.md) | [English](Configuration.md)
 
-Velg **VoltDeck** i et fullskjerms widgetfelt og åpne **Configure widget** fra
-widgetmenyen. Følg gruppene nedenfor i samme rekkefølge som på radioen.
+Last ned den navngitte VoltDeck-ZIP-pakken fra [release-siden](https://github.com/bliatun-code/VoltDeck/releases/latest).
+Samme ZIP brukes til begge installasjonsmåtene:
+
+- **FrSky Suite:** Koble til radioen, åpne **Lua library**, velg **Install Lua scripts**, velg ZIP-filen og trykk **Install scripts**.
+- **Manuelt:** Pakk ut ZIP-filen, opprett `/scripts/VoltDeck/` på radioens skriptdisk og kopier alle de fem utpakkede filene dit. Lua-filen skal ligge som `/scripts/VoltDeck/main.lua`.
+
+Start ETHOS på nytt etter installasjonen. Ved første installasjon velger du
+**VoltDeck** i et fullskjerms widgetfelt. Åpne **Configure widget** fra widgetmenyen
+og kontroller versjonen øverst. Suite viser denne versjonen som **26.10.8**.
+Hvis installasjonen ikke vises oppdatert i Suite, gå ut av og inn i **Lua library**.
+Viser widgeten fortsatt en eldre versjon etter omstart, koble til radioen igjen,
+fjern bare `/scripts/VoltDeck/main.luac` og start ETHOS på nytt.
+Ta sikkerhetskopi av modellen før oppdatering. Behold widgeten som er satt opp og cfg/dat-filene;
+lagrede innstillinger, kildevalg og flytellere beholdes.
+
+Følg gruppene nedenfor i samme rekkefølge som på radioen.
 Innstillinger og kildevalg tilhører den aktive modellen.
 
 Etter side- eller modellbytte kan første korte trykk velge widgeten og neste
-åpne menyen. Widgeten fornyer ETHOS-fokus mens den er valgt og synlig.
-Kort og langt trykk bruker fortsatt radioens vanlige menyer.
+åpne menyen. Se [Widgetmenyen](#widgetmenyen) for Home-menyen, Diagnostics og RTN.
 
 Grå felt er inaktive for valgt metode eller visning. Lagrede verdier beholdes
 når du bytter tilbake. Kildevelgeren bruker ETHOS sin vanlige liste; kontroller
@@ -421,15 +434,22 @@ Den skjer én gang for flygingen, inne i VoltDecks gjeldende widgetfelt.
 
 ### Flight diagnostics
 
-Widgetmenyens valg viser rå/beregnet gass, endepunkter, ARM, airborne gate,
+Åpne **Flight log** fra Home, og velg **Diagnostics** nederst til høyre.
+Knappen er tilgjengelig også før en flyging er registrert. Med scrollehjulet
+ruller du til høyre for å velge knappen og korttrykker for å åpne; rull til venstre
+for å fjerne markeringen. Berøring åpner knappen direkte. **RTN** går til Dashboard.
+
+Diagnostikken viser rå/beregnet gass, endepunkter, ARM, airborne gate,
 pakkespenning og fremdrift mot begge tidskravene. Les statuslinjen sammen med
 de enkelte vilkårene. **LOG DISABLED** betyr at logging er av selv om øvrige
 vilkår passerer. Diagnostikken endrer ikke radioens sikkerhetsfunksjoner.
 Hold motoren sikkert deaktivert mens du kontrollerer gassendepunkter.
 
+![Diagnostics-knapp i en tom flylogg](images/flight-log-empty.png)
+
 ![Flydiagnostikk uten valgt airborne-kilde](images/flight-diagnostics.png)
 
-![Flydiagnostikk med Always on](images/flight-diagnostics-always-on.png)
+![Flydiagnostikk med Always on som ARM-kilde og null gass](images/flight-diagnostics-always-on.png)
 
 ## 9. Preview
 
@@ -443,13 +463,23 @@ når du går tilbake til aktuelle avlesninger.
 
 ## Widgetmenyen
 
+Home-menyen ved korttrykk har fem valg som vises uten scrolling.
+Når en av Home-menyene er åpen, står bakgrunnen stille i opptil **30 sekunder**.
+Den oppdateres igjen når menyen lukkes eller tiden er ute. Telemetri, varsler og
+flylogging fortsetter hele tiden.
+
 | Menyvalg | Resultat |
 |---|---|
-| Configure widget | Åpner gruppene ovenfor. |
 | Flight log / Dashboard | Bytter mellom hovedvisning og flylogg. |
-| Flight diagnostics | Åpner kvalifiseringsstatus og aktuelle kontrollavlesninger. |
 | Reset live peaks | Nullstiller hovedskjermens RPM- og Watt-maksimum. Endrer ikke flyteller eller maksimum i registrert flylogg. |
 | Accept battery counter... | Viser status og eventuelle gjenværende sperrer for [batterikontrollen](#kontroll-før-gjenværende-lading-vises) ved **Consumed mAh**, eller et reset av den valgfrie telleren for gjenværende mAh med en annen metode. Kontroller faktisk lading og sensor før bekreftelse. Den kan ikke omgå avvik over 20 prosentpoeng eller **CHECK CELLS/TYPE** i batterikontrollen. Godkjenning gjenoppretter ikke manglende forbruk, nullstiller ikke sensoren, fyller ikke batteriet og endrer ikke flytellingen. |
+| Configure widget | Åpner gruppene ovenfor. |
+| Configure screens | Åpner ETHOS' skjermkonfigurasjon. |
+
+**Diagnostics** ligger inne i Flight log. Når Flight log eller Diagnostics er valgt,
+går **RTN** til Dashboard. Er en meny eller dialog åpen, lukker første RTN den.
+Et ekstra RTN på Dashboard følger ETHOS' vanlige navigasjon og kan fjerne widgetens
+fokus. Langt trykk åpner fortsatt ETHOS-menyen Reset flight / Reset telemetry / Reset timers.
 
 ## Visningseksempler
 
@@ -478,7 +508,7 @@ Manglende spenning/strøm vises med streker fremfor oppdiktet effekt.
 
 ![Valgfri temperaturmåler](images/custom-temperature-lcd.png)
 
-Velg **Custom**, en temperaturkilde, etiketten **ESC TEMPERATURE**, område
+Velg **Only Custom**, en temperaturkilde, etiketten **ESC TEMPERATURE**, område
 0–100 og 0 desimaler. Den faktiske temperaturenheten kommer fra kilden.
 
 ![KV-basert RPM-estimat](images/kv-estimate-lcd.png)
@@ -530,12 +560,12 @@ maksimal strøm/Watt, pakkespenning lav/høy og modellens flyteller.
 | Motor dearmert, samme batteri | Batteriet frakoblet lenge nok |
 |---|---|
 | ![Kvalifisert økt pauset](images/flight-paused.png) | ![Siste kvalifiserte logg beholdes](images/flight-last-retained.png) |
-| Teller 1 og samme logg beholdes. | LAST FLIGHT LOG beholdes med teller 1. |
+| Teller 3 og samme logg beholdes. | LAST FLIGHT LOG beholdes med teller 3. |
 
 | Neste flyging kvalifiseres | Neste flyging har kvalifisert |
 |---|---|
 | ![Forrige logg mens neste kvalifiseres](images/flight-next-qualifying.png) | ![Ny kvalifisert flyging](images/flight-next-qualified.png) |
-| Forrige logg beholdes; telleren er fortsatt 1. | Telleren blir 2; ny logg erstatter den gamle. |
+| Forrige logg beholdes; telleren er fortsatt 3. | Telleren blir 4; ny logg erstatter den gamle. |
 
 Kontroller kilder, kapasitet, celletall, forbruksreset, lyd og kontrollvilkår
 for modellen før flyging. Ta sikkerhetskopi av modell og SD-kortinnstillinger,

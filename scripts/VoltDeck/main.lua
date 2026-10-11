@@ -4,7 +4,8 @@
 -- Configure one full-screen zone in Ethos. Scalar settings are saved per model.
 -- Artwork is drawn natively. Model images and optional alert audio are user-selected.
 
-local VERSION = "2026.10-v7"
+local RenderLCD = lcd
+local VERSION = "2026.10-v8"
 local MAX_IMAGE_PIXELS = 160000
 local BITMAP_RESERVE = 65536
 local FLIGHT_SESSION
@@ -324,13 +325,13 @@ local DeckCore = (function()
     local nativeFontHeights = {} -- fixed native font constants only
     local function fitText(value, width, height, customFont, small)
         value = tostring(value)
-        local key = not customFont and table.concat({width, height, small and 1 or 0, value}, "|") or nil
+        local key = not customFont and (width .. "|" .. height .. "|" .. (small and "1" or "0") .. "|" .. value) or nil
         local cached = key and fitCache[key]
         if cached then return cached.font, cached.value, cached.w, cached.h end
         local fonts = small and SMALL_FONTS or VALUE_FONTS
         local chosen, tw, th
         if customFont and not small then
-            lcd.font(customFont); tw, th = lcd.getTextSize(value)
+            RenderLCD.font(customFont); tw, th = lcd.getTextSize(value)
             if tw <= width and th <= height then return customFont, value, tw, th end
         end
         for index, font in ipairs(fonts) do
@@ -338,7 +339,7 @@ local DeckCore = (function()
             -- measure fonts that are already known to be too tall for this field.
             local knownHeight = nativeFontHeights[font]
             if not knownHeight or knownHeight <= height or index == #fonts then
-                chosen = font; lcd.font(font); tw, th = lcd.getTextSize(value)
+                chosen = font; RenderLCD.font(font); tw, th = lcd.getTextSize(value)
                 if not knownHeight then
                     nativeFontHeights[font] = th
                 end
@@ -389,6 +390,327 @@ local validWidget, sample = DeckCore.validWidget, DeckCore.sample
 local sourceDetails, rfDetails = DeckCore.sourceDetails, DeckCore.rfDetails
 
 
+-- Drawing stays complete when ETHOS repaints behind a Home popup.
+-- Only the first held paint records resolved native commands, never live telemetry.
+local DisplayFrame = {active = nil}
+DisplayFrame.proxy = setmetatable({}, {__index = lcd})
+local unpackFrame = table.unpack or unpack
+DisplayFrame.proxy.font = function(value)
+    DisplayFrame.active.font = value
+    return lcd.font(value)
+end
+DisplayFrame.proxy.color = function(value)
+    DisplayFrame.active.color = value
+    return lcd.color(value)
+end
+DisplayFrame.proxy.drawText = function(a, b, c, d)
+    local frame = DisplayFrame.active
+    local commands = frame.commands
+    local index = #commands + 1
+    if index <= 1536 then
+        commands[index] = {"drawText", a, b, c, d, n = 4, color = frame.color, font = frame.font}
+        frame.textBytes = frame.textBytes + #c
+    else frame.overflow = true end
+    return lcd.drawText(a, b, c, d)
+end
+DisplayFrame.proxy.drawBitmap = function(a, b, c, d, e)
+    local frame = DisplayFrame.active
+    local commands = frame.commands
+    local index = #commands + 1
+    if index <= 1536 then
+        commands[index] = {"drawBitmap", a, b, c, d, e, n = 5, color = frame.color}
+    else frame.overflow = true end
+    return lcd.drawBitmap(a, b, c, d, e)
+end
+DisplayFrame.proxy.drawFilledRectangle = function(a, b, c, d)
+    local frame = DisplayFrame.active
+    local commands = frame.commands
+    local index = #commands + 1
+    if index <= 1536 then
+        commands[index] = {"drawFilledRectangle", a, b, c, d, n = 4, color = frame.color}
+    else frame.overflow = true end
+    return lcd.drawFilledRectangle(a, b, c, d)
+end
+DisplayFrame.proxy.drawFilledCircle = function(a, b, c)
+    local frame = DisplayFrame.active
+    local commands = frame.commands
+    local index = #commands + 1
+    if index <= 1536 then
+        commands[index] = {"drawFilledCircle", a, b, c, n = 3, color = frame.color}
+    else frame.overflow = true end
+    return lcd.drawFilledCircle(a, b, c)
+end
+DisplayFrame.proxy.drawFilledTriangle = function(a, b, c, d, e, f)
+    local frame = DisplayFrame.active
+    local commands = frame.commands
+    local index = #commands + 1
+    if index <= 1536 then
+        commands[index] = {"drawFilledTriangle", a, b, c, d, e, f, n = 6, color = frame.color}
+    else frame.overflow = true end
+    return lcd.drawFilledTriangle(a, b, c, d, e, f)
+end
+DisplayFrame.proxy.drawLine = function(a, b, c, d)
+    local frame = DisplayFrame.active
+    local commands = frame.commands
+    local index = #commands + 1
+    if index <= 1536 then
+        commands[index] = {"drawLine", a, b, c, d, n = 4, color = frame.color}
+    else frame.overflow = true end
+    return lcd.drawLine(a, b, c, d)
+end
+-- The widget calls only these fixed primitive signatures. Text is already fitted.
+-- Check caps after the complete paint; only text draws count their byte lengths.
+function DisplayFrame.finish(frame)
+    frame.count = #frame.commands
+    if frame.textBytes > 65536 then frame.overflow = true end
+end
+function DisplayFrame.key(widget, width, height)
+    return table.concat({width, height, tostring(widget.configGeneration),
+        tostring(widget.runtimeModel or widget.peakModelKey), tostring(widget.logVisible),
+        tostring(widget.diagnosticsVisible), tostring(widget.modelImage), tostring(widget.valueFont)}, ":")
+end
+function DisplayFrame.replay(frame)
+    local font, color
+    for index = 1, frame.count do
+        local command = frame.commands[index]
+        if command.font ~= nil and command.font ~= font then lcd.font(command.font); font = command.font end
+        if command.color ~= nil and command.color ~= color then lcd.color(command.color); color = command.color end
+        if command[1]=="roundedShape" then DisplayFrame.roundedShape(command[2],command.color)
+        elseif command[1]=="signalBar" then DisplayFrame.signalBar(command[2],command.color)
+        else lcd[command[1]](unpackFrame(command, 2, command.n + 1)) end
+    end
+end
+
+-- Private automatic display hold; telemetry and complete paint remain independent.
+-- A visible, unfocused widget is not sufficient evidence of a Home popup.
+local DisplayControl = {}
+function DisplayControl.clear(widget)
+    local state = widget.displayControl
+    if not state then return end
+    state.frame = nil
+    state.epoch = (state.epoch or 0) + 1
+    if state.holdUntil then state.pending = true end
+    state.holdUntil, state.heldAt, state.focusedAt, state.exitUntil = nil, nil, nil, nil
+    state.fullScreen = nil
+    widget.focusRepaintAt = nil
+end
+function DisplayControl.hold(widget, clock)
+    local state = widget.displayControl
+    if not state or not state.fullScreen or not finite(clock) then return end
+    if not state.holdUntil then state.heldAt, state.holdUntil = clock, clock + 30 end
+    state.focusedAt, state.exitUntil = nil, nil
+    widget.focusRepaintAt = nil
+end
+function DisplayControl.check(widget, clock)
+    local state = widget.displayControl
+    if not state then return end
+    -- Hidden pages must discard arming too, before a later unfocused return.
+    if not finite(clock) or type(lcd.isVisible) ~= "function" then
+        DisplayControl.clear(widget); return
+    end
+    local visibleOK, visible = pcall(lcd.isVisible)
+    if not validWidget(widget) then return end
+    if not visibleOK or type(visible) ~= "boolean" or not visible then
+        DisplayControl.clear(widget); return
+    end
+    if not state.holdUntil then return end
+    -- Timeout and API failures release the hold, never indefinitely freeze a dashboard.
+    if clock < state.heldAt or clock >= state.holdUntil or type(lcd.hasFocus) ~= "function" then
+        DisplayControl.clear(widget); return
+    end
+    local focusOK, focused = pcall(lcd.hasFocus)
+    if not validWidget(widget) then return end
+    if not focusOK or type(focused) ~= "boolean" or focused then
+        DisplayControl.clear(widget)
+    end
+end
+function DisplayControl.request(widget)
+    if not validWidget(widget) then return end
+    local state = widget.displayControl
+    if not state or not state.holdUntil then
+        if state then state.pending = nil end
+        lcd.invalidate()
+    end
+end
+function DisplayControl.paint(widget, width, height)
+    local state = widget.displayControl
+    if not state then state = {}; widget.displayControl = state end
+    local clock = os.clock()
+    if not finite(clock) then DisplayControl.clear(widget); return end
+    if not state.lcdWidth then
+        if type(system.getVersion) ~= "function" then DisplayControl.clear(widget); return end
+        local ok, version = pcall(system.getVersion)
+        if not validWidget(widget) then return end
+        if not ok or type(version) ~= "table" or not finite(version.lcdWidth)
+            or not finite(version.lcdHeight) or version.lcdWidth <= 0 or version.lcdHeight <= 0 then
+            DisplayControl.clear(widget); return
+        end
+        state.lcdWidth, state.lcdHeight = version.lcdWidth, version.lcdHeight
+    end
+    if width ~= state.lcdWidth or height ~= state.lcdHeight
+        or type(lcd.hasFocus) ~= "function" or type(lcd.resetFocusTimeout) ~= "function" then
+        DisplayControl.clear(widget); return
+    end
+    state.fullScreen = true
+    local ok, focused = pcall(lcd.hasFocus)
+    if not validWidget(widget) then return end
+    if not ok or type(focused) ~= "boolean" then DisplayControl.clear(widget); return end
+    if focused then
+        if state.holdUntil then DisplayControl.clear(widget); state.fullScreen = true end
+        -- RTN is passed to ETHOS. Do not rearm during its deliberate focus exit.
+        if state.exitUntil and clock < state.exitUntil then
+            state.focusedAt = nil; widget.focusRepaintAt = state.exitUntil; return
+        end
+        state.exitUntil = nil
+        local renewed = pcall(lcd.resetFocusTimeout)
+        if not validWidget(widget) then return end
+        if not renewed then DisplayControl.clear(widget); return end
+        state.focusedAt, widget.focusRepaintAt = clock, clock + 4
+    else
+        widget.focusRepaintAt = nil
+        if state.exitUntil then
+            state.exitUntil, state.focusedAt = nil, nil
+        elseif state.focusedAt then
+            local elapsed = clock - state.focusedAt
+            if elapsed >= 0 and elapsed < 8 then DisplayControl.hold(widget, clock)
+            else state.focusedAt = nil end
+        end
+    end
+end
+-- View controls are local to the focused widget; native Home retains its routing.
+local Navigation = {}
+function Navigation.key(value, constant)
+    return type(constant) == "number" and value == constant
+end
+function Navigation.view(widget)
+    return widget.diagnosticsVisible and "diagnostics" or widget.logVisible and "log" or "dashboard"
+end
+function Navigation.show(widget, diagnostics)
+    DisplayControl.clear(widget)
+    widget.autoLogDue = nil
+    widget.logVisible, widget.diagnosticsVisible, widget.refresh = false, diagnostics, true
+    local state = widget.navigation
+    if state then state.selected, state.view = nil, Navigation.view(widget) end
+    lcd.invalidate()
+end
+function Navigation.event(widget, category, value, x, y)
+    if not validWidget(widget) or not finite(value) then return false end
+    local key = Navigation.key(category, EVT_KEY)
+    local touch = Navigation.key(category, EVT_TOUCH)
+    if not key and not touch then return false end
+    local clock = os.clock()
+    if not finite(clock) then widget.navigation = nil; return false end
+    local ok, focused
+    if type(lcd.hasFocus) == "function" then ok, focused = pcall(lcd.hasFocus) end
+    if not validWidget(widget) then return false end
+    if not ok or focused ~= true then
+        widget.navigation = nil
+        -- Observe native Dashboard RTN even after Home took focus, as before.
+        -- Log/diagnostics still leave popup RTN routing and its held frame alone.
+        if key and Navigation.view(widget) == "dashboard"
+            and (Navigation.key(value, KEY_RTN_FIRST) or Navigation.key(value, KEY_EXIT_FIRST)
+                or Navigation.key(value, KEY_RTN_BREAK) or Navigation.key(value, KEY_EXIT_BREAK)
+                or Navigation.key(value, KEY_RTN_LONG) or Navigation.key(value, KEY_EXIT_LONG)) then
+            DisplayControl.clear(widget)
+            local display = widget.displayControl
+            if display then display.exitUntil = clock + 1 end
+        end
+        return false
+    end
+    local view, modelIdentity = Navigation.view(widget), widget.runtimeModel or widget.peakModelKey
+    local state = widget.navigation
+    if state and (state.model ~= modelIdentity or state.view ~= view or clock < state.clock) then
+        widget.navigation, state = nil, nil
+    end
+    if state then
+        state.clock = clock
+        if state.rtnUntil and clock > state.rtnUntil then state.rtnUntil = nil end
+        if state.enterUntil and clock > state.enterUntil then state.enterUntil, state.enterLong = nil, nil end
+        if state.touchUntil and clock > state.touchUntil then state.touchUntil = nil end
+    end
+    if key then
+        local first = Navigation.key(value, KEY_RTN_FIRST) or Navigation.key(value, KEY_EXIT_FIRST)
+        local release = Navigation.key(value, KEY_RTN_BREAK) or Navigation.key(value, KEY_EXIT_BREAK)
+        local long = Navigation.key(value, KEY_RTN_LONG) or Navigation.key(value, KEY_EXIT_LONG)
+        if first or release or long then
+            -- A fresh press supersedes a missing release; it never eats an extra Dashboard RTN.
+            if first and state then state.rtnUntil = nil end
+            if state and state.rtnUntil and (release or long) then
+                if release then state.rtnUntil = nil else state.rtnUntil = clock + 30 end
+                return true
+            end
+            if view ~= "dashboard" then
+                state = state or {model = modelIdentity, view = view, clock = clock}
+                widget.navigation = state
+                if release then state.rtnUntil = nil else state.rtnUntil = clock + 30 end
+                state.enterUntil, state.enterLong, state.touchUntil = nil, nil, nil
+                Navigation.show(widget, false)
+                return true
+            end
+            DisplayControl.clear(widget)
+            local display = widget.displayControl
+            if display then display.exitUntil = clock + 1 end
+            return false
+        end
+        if state then state.rtnUntil, state.touchUntil = nil, nil end
+        local enterFirst = Navigation.key(value, KEY_ENTER_FIRST)
+        local enterBreak = Navigation.key(value, KEY_ENTER_BREAK)
+        local enterLong = Navigation.key(value, KEY_ENTER_LONG)
+        if enterFirst and state then state.enterUntil, state.enterLong = nil, nil end
+        if state and state.enterUntil and enterBreak then
+            local activate = not state.enterLong and state.selected and view == "log"
+            state.enterUntil, state.enterLong = nil, nil
+            if activate then Navigation.show(widget, true) end
+            return true
+        end
+        if enterLong then
+            if state and state.enterUntil then state.enterLong, state.enterUntil = true, clock + 30 end
+            return false -- ETHOS owns the long-press Reset Home menu.
+        end
+        if view == "log" then
+            local right = Navigation.key(value, KEY_ROTARY_RIGHT) or Navigation.key(value, ROTARY_RIGHT)
+                or Navigation.key(value, KEY_DOWN_FIRST) or Navigation.key(value, KEY_RIGHT_FIRST)
+            local left = Navigation.key(value, KEY_ROTARY_LEFT) or Navigation.key(value, ROTARY_LEFT)
+                or Navigation.key(value, KEY_UP_FIRST) or Navigation.key(value, KEY_LEFT_FIRST)
+            if right or left then
+                state = state or {model = modelIdentity, view = view, clock = clock}
+                widget.navigation = state
+                state.selected, state.enterUntil, state.enterLong = right, nil, nil
+                DisplayControl.clear(widget); widget.refresh = true; lcd.invalidate()
+                return true
+            end
+            if state and state.selected and enterFirst then
+                state.enterUntil = clock + 30
+                return true
+            end
+        end
+        return false
+    end
+    local start = Navigation.key(value, TOUCH_START)
+    if start and state then state.touchUntil, state.enterUntil, state.enterLong, state.rtnUntil = nil, nil, nil, nil end
+    if state and state.touchUntil then
+        if Navigation.key(value, TOUCH_END) then state.touchUntil = nil; return true end
+        if Navigation.key(value, TOUCH_MOVE) then return true end
+        if Navigation.key(value, TOUCH_LONG) then state.touchUntil = clock + 30; return true end
+    end
+    if start and view == "log" and finite(x) and finite(y) and type(lcd.getWindowSize) == "function" then
+        local sizeOK, width, height = pcall(lcd.getWindowSize)
+        if not validWidget(widget) then return false end
+        if sizeOK and finite(width) and finite(height) and width > 0 and height > 0
+            and x >= width * 640 / 800 and x <= width * 776 / 800
+            and y >= height * 450 / 480 and y <= height * 478 / 480 then
+            state = state or {model = modelIdentity, view = view, clock = clock}
+            widget.navigation = state; state.touchUntil = clock + 30
+            Navigation.show(widget, true)
+            return true
+        end
+    end
+    return false
+end
+local function event(widget, category, value, x, y)
+    return Navigation.event(widget, category, value, x, y)
+end
+
 -- changed() invalidates the active poll as well as scheduling the next one.
 local function validPoll(widget)
     return validWidget(widget) and widget.nextPoll ~= 0
@@ -396,6 +718,7 @@ end
 
 local function changed(widget, resetAlarm)
     if not validWidget(widget) then return end
+    DisplayControl.clear(widget)
     widget.refresh = true
     widget.nextPoll = 0
     widget.metadata = nil
@@ -580,6 +903,8 @@ end
 
 local function read(widget)
     if not validWidget(widget) then return end
+    widget.navigation = nil
+    DisplayControl.clear(widget)
     widget.configKey = modelKey()
     local record, base, problem = configLoad(widget.configKey)
     widget.configError, widget.configPath = problem, base
@@ -780,6 +1105,7 @@ local function updateResources(widget)
     local path = imagePath(requested)
     if widget.loadedImagePath ~= path then widget.imageDirty = true end
     if widget.imageDirty then
+        DisplayControl.clear(widget)
         widget.modelImage, widget.imageError, widget.imagePixels = nil, nil, 0
         widget.imageDirty, widget.loadedImagePath = false, path
         widget.refresh = true
@@ -810,6 +1136,7 @@ local function updateResources(widget)
         end
     end
     if widget.fontDirty then
+        DisplayControl.clear(widget)
         widget.valueFont, widget.fontDirty = nil, false
         collectResources()
         if widget.fontPath ~= "" then
@@ -1511,9 +1838,13 @@ end
 local function wakeup(widget)
     if not validWidget(widget) then return end
     local clock = os.clock()
+    DisplayControl.check(widget, clock)
+    if not validWidget(widget) then return end
+    if widget.displayControl and widget.displayControl.pending then DisplayControl.request(widget) end
+    if not validWidget(widget) then return end
     if widget.focusRepaintAt and clock >= widget.focusRepaintAt then
         widget.focusRepaintAt = nil
-        lcd.invalidate()
+        DisplayControl.request(widget)
         if not validWidget(widget) then return end
     end
     if clock < widget.nextPoll then return end
@@ -1531,6 +1862,7 @@ local function wakeup(widget)
     local key = modelKey()
     if not validPoll(widget) then return end
     if widget.peakModelKey ~= key then
+        DisplayControl.clear(widget)
         widget.peakModelKey, widget.peakRPM, widget.peakWatts = key, nil, nil
         widget.alertStates, widget.audioUntil, widget.metadata, widget.batteryStates = nil, nil, nil, nil
         widget.packCheckState = nil
@@ -1657,7 +1989,7 @@ local function wakeup(widget)
     end
     widget.scratch, widget.data, widget.refresh = widget.data, data, false
     alarm(widget, data, clock)
-    if dirty then lcd.invalidate() end
+    if dirty then DisplayControl.request(widget) end
     local pending = widget.pendingBatteryMessage
     if pending then
         widget.pendingBatteryMessage = nil
@@ -1695,29 +2027,88 @@ local function voltageMetricColor(widget, kind, fallback)
     return batteryColor((cellMv - emptyMv - toleranceMv) * 100 / (fullMv - emptyMv))
 end
 
+-- Keep cold geometry rounding in this renderer; shared telemetry helpers are unchanged.
+local renderFloor=math.floor
+local function drawRoundedShape(shape,color)
+    lcd.color(color)
+    lcd.drawFilledRectangle(shape[1],shape[2],shape[3],shape[4])
+    lcd.drawFilledRectangle(shape[5],shape[6],shape[7],shape[8])
+    lcd.drawFilledRectangle(shape[9],shape[10],shape[11],shape[12])
+    lcd.drawFilledCircle(shape[13],shape[14],shape.radius)
+    lcd.drawFilledCircle(shape[15],shape[16],shape.radius)
+    lcd.drawFilledCircle(shape[17],shape[18],shape.radius)
+    lcd.drawFilledCircle(shape[19],shape[20],shape.radius)
+end
+DisplayFrame.roundedShape=drawRoundedShape
+
 local function rect(x, y, w, h, color)
     if w <= 0 or h <= 0 then return end
-    lcd.color(color)
-    lcd.drawFilledRectangle(round(x), round(y), round(w), round(h))
+    RenderLCD.color(color)
+    RenderLCD.drawFilledRectangle(renderFloor((x)+0.5), renderFloor((y)+0.5), renderFloor((w)+0.5), renderFloor((h)+0.5))
 end
 
 local function rounded(x, y, w, h, radius, color)
-    radius = math.max(0, math.floor(math.min(radius, w / 2, h / 2)))
+    radius = math.max(0, renderFloor(math.min(radius, w / 2, h / 2)))
     if radius < 1 then rect(x, y, w, h, color); return end
+    local x0,x1,x2,x3=renderFloor((x)+0.5),renderFloor((x+radius)+0.5),renderFloor((x+w-radius)+0.5),renderFloor((x+w-radius-1)+0.5)
+    local y0,y1,y2=renderFloor((y)+0.5),renderFloor((y+radius)+0.5),renderFloor((y+h-radius-1)+0.5)
+    local iw,ih,hh=math.max(0,renderFloor((w-2*radius)+0.5)),math.max(0,renderFloor((h-2*radius)+0.5)),renderFloor((h)+0.5)
+    local frame=DisplayFrame.active
+    if frame then
+        local commands,index=frame.commands,#frame.commands+1
+        if index<=1536 then
+            -- Integer geometry is captured once and never modified after publication.
+            local shape={x1,y0,iw,hh,x0,y1,radius,ih,x2,y1,radius,ih,x1,y1,x3,y1,x1,y2,x3,y2,radius=radius}
+            commands[index]={"roundedShape",shape,n=1,color=color}
+        else frame.overflow=true end
+        frame.color=color
+    end
     lcd.color(color)
-    lcd.drawFilledRectangle(round(x + radius), round(y), math.max(0, round(w - 2 * radius)), round(h))
-    lcd.drawFilledRectangle(round(x), round(y + radius), round(radius), math.max(0, round(h - 2 * radius)))
-    lcd.drawFilledRectangle(round(x + w - radius), round(y + radius), round(radius), math.max(0, round(h - 2 * radius)))
-    lcd.drawFilledCircle(round(x + radius), round(y + radius), radius)
-    lcd.drawFilledCircle(round(x + w - radius - 1), round(y + radius), radius)
-    lcd.drawFilledCircle(round(x + radius), round(y + h - radius - 1), radius)
-    lcd.drawFilledCircle(round(x + w - radius - 1), round(y + h - radius - 1), radius)
+    lcd.drawFilledRectangle(x1,y0,iw,hh)
+    lcd.drawFilledRectangle(x0,y1,radius,ih)
+    lcd.drawFilledRectangle(x2,y1,radius,ih)
+    lcd.drawFilledCircle(x1,y1,radius)
+    lcd.drawFilledCircle(x3,y1,radius)
+    lcd.drawFilledCircle(x1,y2,radius)
+    lcd.drawFilledCircle(x3,y2,radius)
 end
+
+
+-- Fixed RF-bar geometry retains the original rounded primitive coverage.
+local function preparedSignalShape(x,y,w,h,radius)
+    radius=math.max(0,math.floor(math.min(radius,w/2,h/2)))
+    if radius<1 then return{rectangle={round(x),round(y),round(w),round(h)}}end
+    local x0,x1,x2,x3=round(x),round(x+radius),round(x+w-radius),round(x+w-radius-1)
+    local y0,y1,y2=round(y),round(y+radius),round(y+h-radius-1)
+    return{x1,y0,math.max(0,round(w-2*radius)),round(h),x0,y1,radius,math.max(0,round(h-2*radius)),
+        x2,y1,radius,math.max(0,round(h-2*radius)),x1,y1,x3,y1,x1,y2,x3,y2,radius=radius}
+end
+local function drawPreparedSignalBar(shape,color)
+    if shape.rectangle then
+        local r=shape.rectangle;RenderLCD.color(color);RenderLCD.drawFilledRectangle(r[1],r[2],r[3],r[4]);return
+    end
+    local frame=DisplayFrame.active
+    if frame then
+        local commands,index=frame.commands,#frame.commands+1
+        if index<=1536 then commands[index]={"signalBar",shape,n=1,color=color}
+        else frame.overflow=true end
+        frame.color=color
+    end
+    lcd.color(color)
+    lcd.drawFilledRectangle(shape[1],shape[2],shape[3],shape[4])
+    lcd.drawFilledRectangle(shape[5],shape[6],shape[7],shape[8])
+    lcd.drawFilledRectangle(shape[9],shape[10],shape[11],shape[12])
+    lcd.drawFilledCircle(shape[13],shape[14],shape.radius)
+    lcd.drawFilledCircle(shape[15],shape[16],shape.radius)
+    lcd.drawFilledCircle(shape[17],shape[18],shape.radius)
+    lcd.drawFilledCircle(shape[19],shape[20],shape.radius)
+end
+DisplayFrame.signalBar=drawPreparedSignalBar
 
 local function text(x, y, value, width, height, color, align, customFont, small)
     local font, fitted, tw, th = DeckCore.fitText(value, width, height, customFont, small)
-    lcd.font(font); lcd.color(color)
-    lcd.drawText(round(x), round(math.max(0, math.min(y, SURFACE_HEIGHT - th))), fitted, align or LEFT)
+    RenderLCD.font(font); RenderLCD.color(color)
+    RenderLCD.drawText(round(x), round(math.max(0, math.min(y, SURFACE_HEIGHT - th))), fitted, align or LEFT)
     return tw, th
 end
 
@@ -1746,11 +2137,18 @@ local function drawSignal(widget, colors, x, y, value, unit, label, channel, sx,
     local active = value and math.ceil(ratio * 5) or 0
     local tone = value == nil and colors.secondary or value <= critical and COLORS.red
         or value <= warning and COLORS.yellow or colors.accent
-    for bar = 1, 5 do
-        local height = (5 + bar * 3) * sy
-        rounded(x + (104 + (bar - 1) * 7) * sx, y + 35 * sy - height,
-            4 * sx, height, 1 * sx, bar <= active and tone or colors.track)
+    local geometry=widget.signalGeometry
+    if not geometry then geometry={};widget.signalGeometry=geometry end
+    local bars=geometry[channel]
+    if not bars or bars.x~=x or bars.y~=y or bars.sx~=sx or bars.sy~=sy then
+        bars={x=x,y=y,sx=sx,sy=sy}
+        for bar=1,5 do
+            local height=(5+bar*3)*sy
+            bars[bar]=preparedSignalShape(x+(104+(bar-1)*7)*sx,y+35*sy-height,4*sx,height,1*sx)
+        end
+        geometry[channel]=bars
     end
+    for bar=1,5 do drawPreparedSignalBar(bars[bar],bar<=active and tone or colors.track)end
     text(x, y + 14 * sy, valueText(value, 0) .. (unit or ""), 99 * sx, 23 * sy, tone)
 end
 
@@ -1766,9 +2164,9 @@ local function drawBattery(widget, colors, sx, sy)
     local segmentH = (h - 26 * sy - 9 * gap) / 10
     for segment = 1, 10 do
         local segmentY = y + h - 13 * sy - segment * segmentH - (segment - 1) * gap
-        rounded(x + 11 * sx, segmentY, w - 22 * sx, segmentH, 3 * scale, colors.track)
+        local fill = data.percent and clamp(data.percent / 10 - (segment - 1), 0, 1) or 0
+        if fill < 1 then rounded(x + 11 * sx, segmentY, w - 22 * sx, segmentH, 3 * scale, colors.track) end
         if data.percent ~= nil then
-            local fill = clamp(data.percent / 10 - (segment - 1), 0, 1)
             if fill > 0 then
                 local fillHeight = segmentH * fill
                 rounded(x + 11 * sx, segmentY + segmentH - fillHeight,
@@ -1848,12 +2246,12 @@ local function drawMeter(widget, colors, sx, sy, kind)
             elseif zone >= widget.redZone - 20 then color = COLORS.yellow
             else color = colors.accent end
         end
-        lcd.color(color)
+        RenderLCD.color(color)
         local slant, height = 2 * sx, 16 * sy
-        lcd.drawFilledTriangle(round(segmentX + slant), round(segmentY),
+        RenderLCD.drawFilledTriangle(round(segmentX + slant), round(segmentY),
             round(segmentX + width), round(segmentY),
             round(segmentX), round(segmentY + height))
-        lcd.drawFilledTriangle(round(segmentX + width), round(segmentY),
+        RenderLCD.drawFilledTriangle(round(segmentX + width), round(segmentY),
             round(segmentX + width - slant), round(segmentY + height),
             round(segmentX), round(segmentY + height))
     end
@@ -1926,12 +2324,12 @@ local function drawFlightGraph(widget, colors, flight, channel, x, y, width, hei
         return
     end
     local range = math.max(1, maximumValue - minimumValue)
-    lcd.color(COLORS.yellow)
+    RenderLCD.color(COLORS.yellow)
     local warningY = round(y + height - clamp((warning - minimumValue) / range, 0, 1) * height)
-    lcd.drawLine(round(x), warningY, round(x + width), warningY)
-    lcd.color(COLORS.red)
+    RenderLCD.drawLine(round(x), warningY, round(x + width), warningY)
+    RenderLCD.color(COLORS.red)
     local criticalY = round(y + height - clamp((critical - minimumValue) / range, 0, 1) * height)
-    lcd.drawLine(round(x), criticalY, round(x + width), criticalY)
+    RenderLCD.drawLine(round(x), criticalY, round(x + width), criticalY)
     local ready = widget.rfGraphs
     if ready and (ready.flight ~= flight or ready.width ~= widget.graphWidth
         or ready.height ~= widget.graphHeight) then ready = nil end
@@ -1942,12 +2340,12 @@ local function drawFlightGraph(widget, colors, flight, channel, x, y, width, hei
         -- At most 48 primitives per channel: no history scan or per-point geometry.
         for index = 1, #segments, 6 do
             local tone = tones[segments[index + 4]]
-            if tone ~= previousTone then lcd.color(tone); previousTone = tone end
+            if tone ~= previousTone then RenderLCD.color(tone); previousTone = tone end
             if segments[index + 5] == 1 then
-                lcd.drawLine(segments[index], segments[index + 1],
+                RenderLCD.drawLine(segments[index], segments[index + 1],
                     segments[index + 2], segments[index + 3])
             else
-                lcd.drawFilledRectangle(segments[index], segments[index + 1],
+                RenderLCD.drawFilledRectangle(segments[index], segments[index + 1],
                     segments[index + 2], segments[index + 3])
             end
         end
@@ -1963,6 +2361,16 @@ local function drawFlightGraph(widget, colors, flight, channel, x, y, width, hei
     local limits = unit == "%" and "VFR early " .. warning .. "% / low " .. critical .. "%"
         or profile .. " low " .. warning .. " / crit " .. critical .. " dB"
     text(x, y + height + 23 * sy, limits, width, 14 * sy, colors.secondary, LEFT, nil, true)
+end
+
+function Navigation.draw(widget, colors, sx, sy)
+    local state = widget.navigation
+    local selected = state and state.selected and state.view == "log"
+        and state.model == (widget.runtimeModel or widget.peakModelKey)
+    rect(640 * sx, 450 * sy, 136 * sx, 28 * sy, selected and colors.accent or colors.border)
+    rect(641 * sx, 451 * sy, 134 * sx, 26 * sy, colors.track)
+    text(708 * sx, 456 * sy, "Diagnostics", 124 * sx, 16 * sy,
+        selected and colors.accent or colors.secondary, CENTERED, nil, true)
 end
 
 local function paintFlight(widget, colors, sx, sy)
@@ -2002,10 +2410,11 @@ local function paintFlight(widget, colors, sx, sy)
         text(24 * sx, 430 * sy, "KV POTENTIAL MAX " .. valueText(flight.maxPotential, 0)
             .. " rpm (not measured)", 752 * sx, 17 * sy, colors.secondary, LEFT, nil, true)
         text(24 * sx, 449 * sy, "RF: 48 minimum bins/channel; gaps = missing data. Visual limits only.",
-            752 * sx, 17 * sy, colors.secondary, LEFT, nil, true)
+            600 * sx, 17 * sy, colors.secondary, LEFT, nil, true)
     end
-    text(24 * sx, 463 * sy, "Widget menu: Dashboard / Flight log", 750 * sx, 14 * sy,
+    text(24 * sx, 463 * sy, "RTN: Dashboard", 580 * sx, 14 * sy,
         colors.accent, LEFT, nil, true)
+    Navigation.draw(widget, colors, sx, sy)
 end
 
 local function paintDiagnostics(widget, colors, sx, sy)
@@ -2055,29 +2464,15 @@ local function paintDiagnostics(widget, colors, sx, sy)
     text(24 * sx, 436 * sy, data.logStoreError or ("COUNTER " .. tostring(data.logCount or 0)
         .. "   " .. (widget.preview and "Preview: no logging" or "Live diagnostic, not an airborne detector")),
         752 * sx, 16 * sy, data.logStoreError and COLORS.red or colors.secondary, LEFT, nil, true)
-    text(24 * sx, 463 * sy, "Widget menu: Dashboard / Flight log / Flight diagnostics",
+    text(24 * sx, 463 * sy, "RTN: Dashboard",
         752 * sx, 14 * sy, colors.accent, LEFT, nil, true)
 end
 
-local function keepFocus(widget)
-    -- Home focus expires in ETHOS. Refresh only the visible widget's existing
-    -- focus; leave native short/long presses and other pages to ETHOS.
-    widget.focusRepaintAt = nil
-    if type(lcd.hasFocus) == "function" and type(lcd.resetFocusTimeout) == "function" then
-        local ok, focused = pcall(lcd.hasFocus)
-        if ok and focused == true then
-            local renewed = pcall(lcd.resetFocusTimeout)
-            if renewed and validWidget(widget) then widget.focusRepaintAt = os.clock() + 4 end
-        end
-    end
+local function keepFocus(widget, width, height)
+    DisplayControl.paint(widget, width, height)
 end
 
-local function paint(widget)
-    if not validWidget(widget) then return end
-    keepFocus(widget)
-    if not validWidget(widget) then return end
-    local w, h = lcd.getWindowSize()
-    if not finite(w) or not finite(h) or w <= 0 or h <= 0 then return end
+local function render(widget, w, h)
     SURFACE_HEIGHT = h
     widget.graphWidth, widget.graphHeight = w, h
     local sx, sy = w / 800, h / 480
@@ -2107,7 +2502,7 @@ local function paint(widget)
     if widget.modelImage then
         local iw, ih = widget.imageWidth or 290, widget.imageHeight or 191
         local fit = math.min(290 * sx / iw, 191 * sy / ih)
-        lcd.drawBitmap(round(24 * sx + (290 * sx - iw * fit) / 2),
+        RenderLCD.drawBitmap(round(24 * sx + (290 * sx - iw * fit) / 2),
             round(131 * sy + (191 * sy - ih * fit) / 2), widget.modelImage,
             round(iw * fit), round(ih * fit))
     else
@@ -2160,6 +2555,45 @@ local function paint(widget)
     drawBattery(widget, colors, sx, sy)
     drawBottom(widget, colors, sx, sy)
 end
+
+local function paint(widget)
+    if not validWidget(widget) then return end
+    local width, height = lcd.getWindowSize()
+    if not finite(width) or not finite(height) or width <= 0 or height <= 0 then
+        DisplayControl.clear(widget); return
+    end
+    DisplayControl.check(widget, os.clock())
+    if not validWidget(widget) then return end
+    keepFocus(widget, width, height)
+    if not validWidget(widget) then return end
+    local state, key = widget.displayControl, DisplayFrame.key(widget, width, height)
+    if state.frame and state.frame.signature ~= key then DisplayControl.clear(widget) end
+    local held, epoch = state.holdUntil ~= nil, state.epoch or 0
+    local frame = held and state.frame or nil
+    -- Even a nested live paint must isolate itself from an outer capture.
+    local previousLCD, previousFrame = RenderLCD, DisplayFrame.active
+    RenderLCD, DisplayFrame.active = lcd, nil
+    local ok, problem
+    if frame then
+        ok, problem = pcall(DisplayFrame.replay, frame)
+    else
+        if held then
+            frame = {commands = {}, count = 0, textBytes = 0, signature = key, epoch = epoch}
+            RenderLCD, DisplayFrame.active = DisplayFrame.proxy, frame
+        end
+        ok, problem = pcall(render, widget, width, height)
+        if ok and held then DisplayFrame.finish(frame) end
+    end
+    RenderLCD, DisplayFrame.active = previousLCD, previousFrame
+    if not ok then DisplayControl.clear(widget); error(problem, 0) end
+    if held and frame and validWidget(widget) and widget.displayControl == state
+        and state.holdUntil and (state.epoch or 0) == epoch then
+        if frame.overflow or DisplayFrame.key(widget, width, height) ~= key then
+            DisplayControl.clear(widget)
+        else state.frame = frame end
+    end
+end
+
 
 local function numberField(widget, label, key, minimum, maximum, suffix, step, onChanged, active)
     local generation = widget.configGeneration
@@ -2378,6 +2812,8 @@ end
 
 local function configure(widget)
     if not validWidget(widget) then return end
+    widget.navigation = nil
+    DisplayControl.clear(widget)
     widget.configGeneration = (widget.configGeneration or 0) + 1
     widget.nextPoll = 0
     local generation, bindings = widget.configGeneration, {}
@@ -2624,6 +3060,9 @@ end
 
 local function destroy(widget)
     if not validWidget(widget) then return end
+    widget.navigation = nil
+    widget.displayControl = nil
+    widget.signalGeometry = nil
     widget.destroyed = true
     widget.autoLogSession, widget.autoLogSeen, widget.autoLogDue = nil, nil, nil
     widget.modelImage, widget.valueFont, widget.flightSession = nil, nil, nil
@@ -2642,7 +3081,9 @@ end
 
 local function menu(widget)
     if not validWidget(widget) then return {} end
-    return {
+    widget.navigation = nil
+    DisplayControl.hold(widget, os.clock())
+    local rows = {
         {(widget.logVisible or widget.diagnosticsVisible) and "Dashboard" or "Flight log", function()
             if not validWidget(widget) then return end
             cancelAutoLog(widget)
@@ -2651,25 +3092,28 @@ local function menu(widget)
             widget.diagnosticsVisible, widget.refresh = false, true
             lcd.invalidate()
         end},
-        {"Flight diagnostics", function()
-            if not validWidget(widget) then return end
-            cancelAutoLog(widget)
-            widget.diagnosticsVisible, widget.logVisible, widget.refresh = true, false, true
-            lcd.invalidate()
-        end},
         {"Reset live peaks", function()
             if not validWidget(widget) then return end
             widget.peakRPM, widget.peakWatts = nil, nil; changed(widget) end},
         {"Accept battery counter...", function()
             confirmBatteryCounter(widget) end},
     }
+    for _, row in ipairs(rows) do
+        local action = row[2]
+        row[2] = function(...)
+            if not validWidget(widget) then return end
+            DisplayControl.clear(widget)
+            return action(...)
+        end
+    end
+    return rows
 end
 
 local function init()
     system.registerWidget({
         key = "vdeck", name = "VoltDeck", create = create, paint = paint,
         wakeup = wakeup, configure = configure, read = read, write = write,
-        menu = menu, destroy = destroy,
+        menu = menu, destroy = destroy, event = event,
         persistent = true, title = false,
     })
 end

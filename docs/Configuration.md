@@ -2,13 +2,18 @@
 
 [Home](../README.md) | [Installation](VoltDeck.md) | [Norsk](Konfigurasjon-norsk.md)
 
-Select **VoltDeck** in a full-screen widget area, then open **Configure widget**
-from the widget menu. Follow the groups below in their radio-menu order.
+In **FrSky Suite > Lua library > Install Lua scripts**, select the release ZIP and
+click **Install scripts**. The same ZIP supports manual installation into `/scripts/VoltDeck/`.
+Follow the [installation steps](VoltDeck.md#installation), restart ETHOS and check
+the version at the top of **Configure widget**. Keep the configured widget and existing cfg/dat files when updating.
+
+On first installation, select **VoltDeck** in a full-screen widget area.
+Open **Configure widget** from the widget menu and follow the groups below in their radio-menu order.
 Settings and source selections belong to the active model.
 
 After a page or model change, the first short press may select the widget and
-the next opens its menu. The widget renews ETHOS focus while selected and
-visible. Short and long presses still use the radio's standard menus.
+the next opens its menu. See [Widget actions](#widget-actions) for Home-menu
+navigation, Diagnostics and RTN.
 
 Grey fields are inactive for the current method or display. Their saved values
 remain available when you change back. Source pickers use ETHOS's normal source
@@ -420,16 +425,23 @@ switch. It opens once for that flight, inside VoltDeck's current widget area.
 
 ### Flight diagnostics
 
-The widget-menu action shows live raw/normalized throttle, endpoints, ARM,
+Open **Flight log** from Home, then select **Diagnostics** at the bottom right.
+The button is available even before a flight has been recorded. With the scroll
+wheel, turn right to select it and short-press to open; turn left to clear the
+selection. Touch can open the button directly. **RTN** returns to Dashboard.
+
+Diagnostics shows live raw/normalized throttle, endpoints, ARM,
 airborne gate, pack voltage and progress toward both time requirements.
 Read its status banner together with the individual gates. **LOG DISABLED**
 means logging is Off even if the other gates pass. Diagnostics do not change
 the radio's safety functions. Keep the motor safely disabled while checking
 control endpoints.
 
+![Diagnostics button in an empty flight log](images/flight-log-empty.png)
+
 ![Flight diagnostics with no airborne source selected](images/flight-diagnostics.png)
 
-![Flight diagnostics with Always on selected](images/flight-diagnostics-always-on.png)
+![Flight diagnostics with an Always on ARM source and zero throttle](images/flight-diagnostics-always-on.png)
 
 ## 9. Preview
 
@@ -443,13 +455,23 @@ when you return to live readings.
 
 ## Widget actions
 
+The short-press **Home** menu contains five choices, all visible without scrolling.
+While either Home menu is open, the background stays still for up to **30 seconds**.
+It updates again when the menu closes or the limit expires. Telemetry, alerts and
+flight logging continue throughout.
+
 | Menu action | Result |
 |---|---|
-| Configure widget | Opens the setup groups above. |
 | Flight log / Dashboard | Switches between the dashboard and flight log. |
-| Flight diagnostics | Opens qualification status and live control readings. |
 | Reset live peaks | Clears the dashboard's RPM and Watts session peaks. It does not reset the flight count or the recorded flight's maxima. |
 | Accept battery counter... | Shows the status and any remaining blockers for [the pack check](#check-before-showing-remaining-charge) with **Consumed mAh**, or reviews a reset of the optional remaining-mAh counter with another method. Check actual charge and the sensor before confirming. It cannot bypass a difference above 20 points or **CHECK CELLS/TYPE** in the pack check. Acceptance does not restore missing consumption, reset the sensor, fill the battery or change the flight count. |
+| Configure widget | Opens the setup groups above. |
+| Configure screens | Opens ETHOS's screen configuration. |
+
+**Diagnostics** is inside Flight log. With Flight log or Diagnostics selected,
+**RTN** returns to Dashboard. If a menu or dialog is open, close it with RTN first.
+Another RTN on Dashboard follows ETHOS's normal navigation and can deselect the
+widget. Long-press still opens ETHOS's Reset flight / Reset telemetry / Reset timers menu.
 
 ## Display examples
 
@@ -478,7 +500,7 @@ Missing voltage/current gives dashes rather than invented power.
 
 ![Custom temperature meter](images/custom-temperature-lcd.png)
 
-Choose **Custom**, a temperature source, label **ESC TEMPERATURE**, range
+Choose **Only Custom**, a temperature source, label **ESC TEMPERATURE**, range
 0–100 and decimals 0. The source supplies the actual temperature unit.
 
 ![KV-based estimated RPM](images/kv-estimate-lcd.png)
@@ -530,12 +552,12 @@ maximum current/Watts, pack low/high and the model's flight count.
 | Motor disarmed, same pack | Pack disconnected past the delay |
 |---|---|
 | ![Qualified session paused](images/flight-paused.png) | ![Last qualified log retained](images/flight-last-retained.png) |
-| Count 1 and the existing record remain. | LAST FLIGHT LOG remains with count 1. |
+| Count 3 and the existing record remain. | LAST FLIGHT LOG remains with count 3. |
 
 | Next candidate is qualifying | Next candidate has qualified |
 |---|---|
 | ![Previous log during new qualification](images/flight-next-qualifying.png) | ![New qualified flight](images/flight-next-qualified.png) |
-| Previous record remains; count is still 1. | Count becomes 2; the new record replaces it. |
+| Previous record remains; count is still 3. | Count becomes 4; the new record replaces it. |
 
 Before flying, check the selected sources, capacity, cell count, consumption
 reset, audio and control gates for this model. Keep backups of the model and

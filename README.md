@@ -1,11 +1,11 @@
 # VoltDeck
 A full-screen battery, telemetry and power dashboard for FrSky ETHOS 1.6.6 and 26.1.2.
 
-**VoltDeck 2026.10-v7: latest release.**
+**VoltDeck 2026.10-v8: latest release.**
 
 Physical radio testing of this version passed.
 
-[Download VoltDeck-2026.10-v7.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v7/VoltDeck-2026.10-v7.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v7)
+[Download VoltDeck-2026.10-v8.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v8/VoltDeck-2026.10-v8.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v8)
 
 ![VoltDeck: RPM and electrical power](docs/images/rpm-watts-lcd.png)
 
@@ -49,14 +49,22 @@ The screenshots use illustrative values.
 
 ## Install VoltDeck
 
-1. Download [VoltDeck-2026.10-v7.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v7/VoltDeck-2026.10-v7.zip) from the release assets, not GitHub's automatically generated source archive.
-2. Extract its `scripts/VoltDeck` folder onto the radio SD card so the final path is `scripts/VoltDeck/main.lua`.
-3. Remove any existing `scripts/VoltDeck/main.luac`, then restart ETHOS.
-4. Create a full-screen widget area and select **VoltDeck**.
-5. Configure the sensors and battery capacity for that particular model.
+Download [VoltDeck-2026.10-v8.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v8/VoltDeck-2026.10-v8.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
 
-The ZIP includes installation instructions, license and notices. Keep a backup
-of your model and widget settings when updating.
+- **FrSky Suite:** Connect the radio, open **Lua library**, choose **Install Lua scripts**, select the ZIP and click **Install scripts**.
+- **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all extracted files into it. The final Lua path is `/scripts/VoltDeck/main.lua`.
+
+Restart ETHOS after installation.
+On first installation, select **VoltDeck** in a full-screen widget area and follow the
+[illustrated guide](docs/Configuration.md) for your model's sources and battery settings.
+Open **Configure widget** from the widget menu and check the version at the top.
+Suite displays this release as **26.10.8**.
+If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
+If the widget still shows an older version after restarting, follow the
+[installation troubleshooting](docs/VoltDeck.md#installation).
+
+Back up your model before updating. Keep the configured widget and existing cfg/dat files;
+saved settings, source selections and flight counts are retained.
 
 ## Pack sessions and last flight
 
@@ -76,6 +84,10 @@ delay, for example 30 s, if needed.
 
 The previous flight log remains visible while the next flight qualifies.
 [See all four transitions](docs/Configuration.md#illustrated-pack-session-transitions).
+
+Open **Flight log** from the five-choice Home menu. Its bottom-right **Diagnostics**
+button shows the logging conditions, even with no recorded flight. **RTN** returns
+from either view to Dashboard. See the [menu walkthrough](docs/Configuration.md#widget-actions).
 
 ### Optional automatic flight log
 

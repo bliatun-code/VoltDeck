@@ -21,20 +21,36 @@ See the [illustrated configuration guide](Configuration.md) or the
 
 ## Installation
 
-Download [VoltDeck-2026.10-v7.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v7/VoltDeck-2026.10-v7.zip) from the
-[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v7). Use the named widget package,
-not the automatically generated repository source archive. Extract its
-`scripts/VoltDeck` folder onto the SD card, preserving this structure:
+Download [VoltDeck-2026.10-v8.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v8/VoltDeck-2026.10-v8.zip) from the
+[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v8). Use the named widget package,
+not the automatically generated repository source archive. The same ZIP supports
+Suite and manual installation.
+
+- **FrSky Suite:** Connect the radio, open **Lua library**, choose **Install Lua scripts**, select the ZIP and click **Install scripts**. Suite installs the files into `/scripts/VoltDeck/`.
+- **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all five extracted files into it:
 
 ```text
 scripts/
   VoltDeck/
     main.lua
+    ethos_lua_manifest.json
+    INSTALL.txt
+    LICENSE
+    NOTICE.md
 ```
 
-Remove any existing `scripts/VoltDeck/main.luac`, then restart ETHOS.
-Create a full-screen widget area and select **VoltDeck**. Select your model's
+Restart ETHOS after installation.
+On first installation, create a full-screen widget area and select **VoltDeck**. Select your model's
 telemetry sources and enter its battery capacity in the widget configuration.
+Open **Configure widget** from the widget menu and check the version at the top.
+Suite displays this release as **26.10.8**.
+If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
+
+If the widget still shows an older version after restarting, reconnect the radio,
+remove only `/scripts/VoltDeck/main.luac` and restart ETHOS again.
+
+Back up your model before updating. Keep the configured widget and existing cfg/dat files;
+saved settings, source selections and flight counts are retained.
 
 ## Remaining battery
 
@@ -106,6 +122,13 @@ preserved. Large image dimensions can use too much radio memory even when
 the PNG file is small.
 
 ## Flight log limitations
+
+Choose **Flight log** in Home. Open **Diagnostics** with the bottom-right button,
+also available when the log is empty. Turn the wheel right to select the button,
+then short-press, or touch it directly. **RTN** returns from the log or diagnostics
+to Dashboard; close any open menu first. Another RTN uses ETHOS's normal navigation.
+The background stays still while Home is open, for up to 30 seconds; telemetry,
+alerts and logging continue. See [Widget actions](Configuration.md#widget-actions).
 
 Flight detection uses configured arm/throttle conditions, a minimum
 duration and a high-throttle interval. An optional airborne gate can improve
