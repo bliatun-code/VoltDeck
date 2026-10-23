@@ -122,3 +122,7 @@ terms described in [NOTICE](NOTICE.md).
 ## Gasoline models
 
 [GasDeck](https://github.com/bliatun-code/GasDeck) has its own receiver-power, gasoline-engine and fuel dashboard, illustrated guides and independent release cycle.
+
+## Sailplanes and motor gliders
+
+[SoarDeck](https://github.com/bliatun-code/SoarDeck) provides altitude and vario instruments for sailplanes and motor gliders, with optional model pictures and a compact motor-battery display. See its [illustrated walkthrough](https://github.com/bliatun-code/SoarDeck/blob/main/docs/Walkthrough.md) for the available layouts and telemetry examples.
