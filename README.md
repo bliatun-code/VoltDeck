@@ -119,10 +119,12 @@ VoltDeck is available under [MIT](LICENSE). The example artwork has separate
 terms described in [NOTICE](NOTICE.md).
 
 
-## Gasoline models
+## Deck family
 
-[GasDeck](https://github.com/bliatun-code/GasDeck) has its own receiver-power, gasoline-engine and fuel dashboard, illustrated guides and independent release cycle.
+| App | Best suited to | Main instruments |
+| --- | --- | --- |
+| [VoltDeck](https://github.com/bliatun-code/VoltDeck) | Electric powered models | Flight-pack capacity, current, electrical power and motor telemetry. |
+| [GasDeck](https://github.com/bliatun-code/GasDeck) | Gasoline powered models | Receiver batteries, engine RPM, temperatures and fuel. |
+| [SoarDeck](https://github.com/bliatun-code/SoarDeck) | Sailplanes and motor gliders | Altitude, vario, history and motor-battery capacity when applicable. |
 
-## Sailplanes and motor gliders
-
-[SoarDeck](https://github.com/bliatun-code/SoarDeck) provides altitude and vario instruments for sailplanes and motor gliders, with optional model pictures and a compact motor-battery display. See its [illustrated walkthrough](https://github.com/bliatun-code/SoarDeck/blob/main/docs/Walkthrough.md) for the available layouts and telemetry examples.
+Each project has its own repository, illustrated guides and releases.
