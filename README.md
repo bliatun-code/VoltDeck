@@ -7,14 +7,27 @@ Physical radio testing of this version passed.
 
 [Download VoltDeck-2026.10-v9.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v9/VoltDeck-2026.10-v9.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v9)
 
-![VoltDeck: RPM and electrical power](docs/images/rpm-watts-lcd.png)
+<table>
+<tr>
+<td><img src="docs/images/native-voltdeck-deck-photo.png" alt="Deck / model picture" width="400"><br><b>Deck / model picture</b></td>
+<td><img src="docs/images/native-voltdeck-deck-hidden.png" alt="Deck / Hidden" width="400"><br><b>Deck / Hidden</b></td>
+</tr>
+<tr>
+<td><img src="docs/images/native-voltdeck-digital-photo.png" alt="Digital Power / model picture" width="400"><br><b>Digital Power / model picture</b></td>
+<td><img src="docs/images/native-voltdeck-digital-hidden.png" alt="Digital Power / Hidden" width="400"><br><b>Digital Power / Hidden</b></td>
+</tr>
+</table>
 
-The screenshots use illustrative values.
+Genuine X20RS / ETHOS 26.1.2 simulator captures of the current stable version, with controlled illustrative telemetry. No physical sensors were connected.
 
+[Full display gallery and sensor setups](docs/Display-gallery.md) |
+[Norsk visningsgalleri](docs/Visningsgalleri-norsk.md) |
 [Illustrated configuration guide](docs/Configuration.md) |
 [Norsk veiledning](docs/Konfigurasjon-norsk.md) |
 [Installation and usage](docs/VoltDeck.md) |
 [Lua source](scripts/VoltDeck/main.lua)
+
+Ultimate AMR 60: 6S Lipo / 3300 mAh, measured RPM and ESC temperature. See the gallery for exact program choices, source roles and units.
 
 ## Display style and model picture
 
@@ -30,16 +43,16 @@ Changing style or image does not change calculation methods, telemetry sources, 
 
 <table>
 <tr>
-<td><img src="docs/images/rpm-lcd.png" alt="Retro LCD measured RPM"><br><b>Retro LCD RPM</b><br>Segmented scale and session peak.</td>
-<td><img src="docs/images/rpm-watts-lcd.png" alt="Retro LCD RPM and Watts"><br><b>RPM + Watts</b><br>Measured speed beside calculated electrical input power.</td>
+<td><img src="docs/images/native-voltdeck-lower-2-retro.png" alt="Retro LCD measured RPM"><br><b>Retro LCD RPM</b><br>Segmented scale and session peak.</td>
+<td><img src="docs/images/native-voltdeck-lower-6-retro.png" alt="Retro LCD RPM and Watts"><br><b>RPM + Watts</b><br>Measured speed beside calculated electrical input power.</td>
 </tr>
 <tr>
-<td><img src="docs/images/rpm-watts-cell-lcd.png" alt="RPM Watts and average cell voltage"><br><b>Three values</b><br>RPM, Watts and average cell voltage.</td>
-<td><img src="docs/images/flight-log-vfr.png" alt="Synthetic flight summary and VFR graphs"><br><b>Flight summary</b><br>Peaks, duration and bounded RF history.</td>
+<td><img src="docs/images/native-voltdeck-lower-7-retro.png" alt="RPM Watts and average cell voltage"><br><b>Three values</b><br>RPM, Watts and average cell voltage.</td>
+<td><img src="docs/images/flight-log-vfr.png" alt="Illustrative flight summary and VFR graphs"><br><b>Flight summary</b><br>Peaks, duration and bounded RF history.</td>
 </tr>
 <tr>
-<td><img src="docs/images/rpm-watts-custom-lcd.png" alt="RPM Watts and Custom temperature"><br><b>Custom alongside RPM + Watts</b><br>Add a numeric sensor and choose its position.</td>
-<td><img src="docs/images/cell-volts-numeric.png" alt="Average cell voltage"><br><b>Cell voltage</b><br>Scale and colours follow the selected battery type.</td>
+<td><img src="docs/images/native-voltdeck-custom-position-3.png" alt="RPM Watts and Custom temperature"><br><b>Custom alongside RPM + Watts</b><br>Add a numeric sensor and choose its position.</td>
+<td><img src="docs/images/native-voltdeck-lower-4-numeric.png" alt="Average cell voltage"><br><b>Cell voltage</b><br>Scale and colours follow the selected battery type.</td>
 </tr>
 </table>
 

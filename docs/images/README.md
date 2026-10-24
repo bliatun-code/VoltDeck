@@ -21,3 +21,7 @@ See [the illustrated guide](../Configuration.md) and
 [the Norwegian guide](../Konfigurasjon-norsk.md) for settings and limitations.
 The Ultimate AMR model picture is example artwork used with permission.
 It is optional and is not part of the installed widget. See [NOTICE](../../NOTICE.md).
+
+## Deck and Digital gallery
+
+Files beginning `native-` are current stable-app captures from the ETHOS 26.1.2 X20RS simulator at 800×480. Readings are controlled illustrative values. The [display gallery](../Display-gallery.md) and [norsk visningsgalleri](../Visningsgalleri-norsk.md) give the model, exact settings and required telemetry roles/units. Earlier session/acceptance walkthrough captures remain behavioral examples.

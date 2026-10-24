@@ -1,5 +1,7 @@
 # VoltDeck: illustrert konfigurasjonsguide
 
+[Visningsgalleri: Deck og Digital med/uten bilde, valg og telemetrikilder](Visningsgalleri-norsk.md)
+
 [Hjem](../README.md) | [Installasjon](VoltDeck.md) | [English](Configuration.md)
 
 Last ned den navngitte VoltDeck-ZIP-pakken fra [release-siden](https://github.com/bliatun-code/VoltDeck/releases/latest).
@@ -35,18 +37,23 @@ Oppsettsbildene viser simulatorens menyfelt. Velg sensorene som finnes i din
 modell; tabellene forklarer hva kildene skal måle. Visningseksemplene for
 hovedskjerm og flylogg bruker illustrative verdier.
 
-Enkelte menybilder viser den tidligere menyrekkefølgen. Bruk felttabellene nedenfor for **Display style** og dagens grupperekkefølge.
+Widgetmenyen og Appearance-bildene nedenfor viser gjeldende stabile versjon. Eldre detaljbilder av kilder og varsler beholdes som feltreferanser; bruk tabellene for dagens grupperekkefølge og velg egne oppdagede sensorer.
 
 <table>
 <tr>
-<td><img src="images/widget-menu.png" alt="VoltDecks widgetmeny"><br><b>Widgetmeny</b></td>
-<td><img src="images/configuration-overview.png" alt="VoltDecks innstillingsgrupper"><br><b>Configure widget</b></td>
+<td><img src="images/native-voltdeck-widget-menu.png" alt="VoltDecks widgetmeny"><br><b>Widgetmeny</b></td>
+<td><img src="images/native-voltdeck-appearance.png" alt="VoltDeck Appearance"><br><b>Appearance</b></td>
 </tr>
 </table>
 
 ## 1. Appearance
 
-![Utseendeinnstillinger](images/voltdeck-setup-appearance.png)
+<table>
+<tr>
+<td><img src="images/native-voltdeck-style-choices.png" alt="Display style: Deck / Digital"><br><b>Display style</b></td>
+<td><img src="images/native-voltdeck-image-choices.png" alt="Image source: Selected model / Image file / Hidden"><br><b>Image source</b></td>
+</tr>
+</table>
 
 | Felt | Hva det endrer |
 |---|---|
@@ -254,7 +261,7 @@ eller fullt batteri. En inaktiv valgt RF-kilde beholder navn og enhet; andre
 RF-enheter avvises. Radioens batteri og timer kan fortsatt være tilgjengelige
 når modelltelemetrien er borte.
 
-![Manglende modelltelemetri](images/telemetry-unavailable.png)
+![Manglende modelltelemetri](images/native-voltdeck-missing-telemetry.png)
 
 ## 4. RF signals
 
@@ -333,7 +340,7 @@ Deck med bilde og Digital beholder maksimalt tre rader: med **RPM + W + cell** e
 En valgt kilde beholder raden ved telemetribortfall og viser ukjent verdi til
 målingene kommer tilbake.
 
-![RPM, Watts og Custom-temperatur](images/rpm-watts-custom-lcd.png)
+![RPM, Watts og Custom-temperatur](images/native-voltdeck-custom-position-3.png)
 
 ### Cellevolt: skala og farger
 
@@ -501,37 +508,33 @@ fokus. Langt trykk åpner fortsatt ETHOS-menyen Reset flight / Reset telemetry /
 
 <table>
 <tr>
-<td><img src="images/rpm-lcd.png" alt="LCD målt RPM"><br><b>RPM / Retro LCD</b><br>Measured RPM, Manual, RPM max 12000.</td>
-<td><img src="images/rpm-watts-lcd.png" alt="RPM og elektrisk effekt"><br><b>RPM + Watts / Retro LCD</b><br>Watt max 1600 W.</td>
+<td><img src="images/native-voltdeck-lower-2-retro.png" alt="LCD målt RPM"><br><b>RPM / Retro LCD</b><br>Measured RPM, Manual, RPM max 12000.</td>
+<td><img src="images/native-voltdeck-lower-6-retro.png" alt="RPM og elektrisk effekt"><br><b>RPM + Watts / Retro LCD</b><br>Watt max 1500 W.</td>
 </tr>
 <tr>
-<td><img src="images/rpm-watts-cell-lcd.png" alt="RPM Watt og gjennomsnittlig cellevolt"><br><b>RPM + W + cell / Retro LCD</b></td>
-<td><img src="images/rpm-numeric.png" alt="RPM som tall"><br><b>RPM / Numeric</b></td>
+<td><img src="images/native-voltdeck-lower-7-retro.png" alt="RPM Watt og gjennomsnittlig cellevolt"><br><b>RPM + W + cell / Retro LCD</b></td>
+<td><img src="images/native-voltdeck-lower-2-numeric.png" alt="RPM som tall"><br><b>RPM / Numeric</b></td>
 </tr>
 <tr>
-<td><img src="images/watts-lcd.png" alt="Watt som LCD"><br><b>Watts / Retro LCD</b></td>
-<td><img src="images/cell-volts-numeric.png" alt="Gjennomsnittlig cellevolt med egendefinert bakgrunn"><br><b>Cell volts / Numeric</b><br>Custom bakgrunn; mAh display Remaining.</td>
+<td><img src="images/native-voltdeck-lower-3-retro.png" alt="Watt som LCD"><br><b>Watts / Retro LCD</b></td>
+<td><img src="images/native-voltdeck-lower-4-numeric.png" alt="Gjennomsnittlig cellevolt på svart bakgrunn"><br><b>Cell volts / Numeric</b><br>Svart bakgrunn; mAh display Remaining.</td>
 </tr>
 </table>
 
-22,8 V × 38,6 A gir omtrent **880 W** elektrisk tilført effekt.
-21,8 V ÷ 6 celler gir **3,63 V** gjennomsnittlig cellevolt.
+Bildene viser 22,8 V × 24,5 A, omtrent **559 W** elektrisk tilført effekt.
+22,8 V ÷ 6 celler gir **3,80 V** gjennomsnittlig cellevolt.
 Manglende spenning/strøm vises med streker fremfor oppdiktet effekt.
 
 ### Valgfri telemetri og KV-estimat
 
-![Valgfri temperaturmåler](images/custom-temperature-lcd.png)
+![Valgfri temperaturmåler](images/native-voltdeck-lower-1-retro.png)
 
-Velg **Only Custom**, en temperaturkilde, etiketten **ESC TEMPERATURE**, område
-0–100 og 0 desimaler. Den faktiske temperaturenheten kommer fra kilden.
+Velg **Only Custom**, en temperaturkilde, etiketten **ESC TEMP**, område
+0–150 °C og 0 desimaler. Den faktiske temperaturenheten kommer fra kilden.
 
-![KV-basert RPM-estimat](images/kv-estimate-lcd.png)
+![KV-basert RPM-estimat](images/native-voltdeck-kv-estimate.png)
 
-Eksemplet bruker **RPM / Retro LCD**, **KV x volts (est.)**, 420 KV,
-illustrativ faktor 85% og **Full-pack KV**. Ved 22,8 V blir det
-420 × 22,8 × 0,85 ≈ **8140 rpm**. Med 6S Lipo blir fast skala
-420 × 6 × 4,20 = 10584, avrundet opp til **11000 rpm**.
-85% er et eksempel, ikke en generell korreksjon for propellbelastning.
+Eksemplet bruker **RPM / Retro LCD**, **RPM value = KV x volts (est.)**, **Motor KV = 500**, **Estimate factor = 90%**, **RPM scale = Manual** og **RPM max = 12000**. Ved 22,8 V blir det 500 × 22,8 × 0,90 = **10260 rpm**. Faktoren er et illustrasjonsvalg, ikke en generell korreksjon for propellbelastning. Dette er estimert turtall, ikke en måling.
 
 ### Batterifarger
 

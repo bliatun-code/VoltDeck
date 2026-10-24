@@ -1,5 +1,7 @@
 # VoltDeck
 
+[Display gallery: Deck and Digital with/without a picture, settings and telemetry sources](Display-gallery.md)
+
 ## Features
 
 - Full-screen dashboard with radio-theme, black or custom background.

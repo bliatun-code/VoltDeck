@@ -14,3 +14,7 @@ license to that supplied artwork.
 Dashboard examples are ETHOS simulator renders with illustrative values.
 Menu and configuration images show the simulator interface.
 FrSky/ETHOS names and any visible vendor UI remain their owners' marks.
+
+## Current native display gallery
+
+The Deck/Digital gallery uses genuine ETHOS 26.1.2 X20RS simulator captures of the stable app. Telemetry readings are controlled illustrations, not recordings from connected hardware. Instruments are native app output; illustrative data are disclosed in captions rather than stamped over the instruments. Production Synthetic preview behavior is unchanged.

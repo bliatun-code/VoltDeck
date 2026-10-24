@@ -1,5 +1,7 @@
 # VoltDeck: illustrated configuration guide
 
+[Display gallery: Deck and Digital with/without a picture, settings and telemetry sources](Display-gallery.md)
+
 [Home](../README.md) | [Installation](VoltDeck.md) | [Norsk](Konfigurasjon-norsk.md)
 
 In **FrSky Suite > Lua library > Install Lua scripts**, select the release ZIP and
@@ -27,18 +29,23 @@ The setup pictures show the simulator's menu fields. Select the sensors fitted
 to your own model; the tables explain what each source must measure.
 The dashboard and flight-log examples use illustrative readings.
 
-Some menu images show the earlier menu arrangement. Use the field tables below for **Display style** and the current group order.
+The widget menu and Appearance pictures below show the current stable version. Older detailed source/alert pictures remain as field references; use the tables for the current group order and select your own discovered sensors.
 
 <table>
 <tr>
-<td><img src="images/widget-menu.png" alt="VoltDeck widget menu"><br><b>Widget menu</b></td>
-<td><img src="images/configuration-overview.png" alt="VoltDeck configuration groups"><br><b>Configure widget</b></td>
+<td><img src="images/native-voltdeck-widget-menu.png" alt="VoltDeck widget menu"><br><b>Widget menu</b></td>
+<td><img src="images/native-voltdeck-appearance.png" alt="VoltDeck Appearance"><br><b>Appearance</b></td>
 </tr>
 </table>
 
 ## 1. Appearance
 
-![Appearance settings](images/voltdeck-setup-appearance.png)
+<table>
+<tr>
+<td><img src="images/native-voltdeck-style-choices.png" alt="Display style: Deck / Digital"><br><b>Display style</b></td>
+<td><img src="images/native-voltdeck-image-choices.png" alt="Image source: Selected model / Image file / Hidden"><br><b>Image source</b></td>
+</tr>
+</table>
 
 | Field | What it changes |
 |---|---|
@@ -246,7 +253,7 @@ or a full pack. An inactive selected RF source keeps its name and unit; unsuppor
 RF units are rejected. The radio battery and timer may remain available while
 model telemetry is absent.
 
-![Unavailable model telemetry](images/telemetry-unavailable.png)
+![Unavailable model telemetry](images/native-voltdeck-missing-telemetry.png)
 
 ## 4. RF signals
 
@@ -325,7 +332,7 @@ Deck with a picture and Digital retain at most three rows: with **RPM + W + cell
 A selected source keeps its row during a telemetry gap and shows an unknown
 value until readings return.
 
-![RPM, Watts and Custom temperature](images/rpm-watts-custom-lcd.png)
+![RPM, Watts and Custom temperature](images/native-voltdeck-custom-position-3.png)
 
 ### Cell-voltage scale and colours
 
@@ -493,37 +500,33 @@ widget. Long-press still opens ETHOS's Reset flight / Reset telemetry / Reset ti
 
 <table>
 <tr>
-<td><img src="images/rpm-lcd.png" alt="Retro LCD measured RPM"><br><b>RPM / Retro LCD</b><br>Measured RPM, Manual scale, RPM max 12000.</td>
-<td><img src="images/rpm-watts-lcd.png" alt="RPM and electrical Watts"><br><b>RPM + Watts / Retro LCD</b><br>Watt max 1600 W.</td>
+<td><img src="images/native-voltdeck-lower-2-retro.png" alt="Retro LCD measured RPM"><br><b>RPM / Retro LCD</b><br>Measured RPM, Manual scale, RPM max 12000.</td>
+<td><img src="images/native-voltdeck-lower-6-retro.png" alt="RPM and electrical Watts"><br><b>RPM + Watts / Retro LCD</b><br>Watt max 1500 W.</td>
 </tr>
 <tr>
-<td><img src="images/rpm-watts-cell-lcd.png" alt="RPM Watts and average cell voltage"><br><b>RPM + W + cell / Retro LCD</b></td>
-<td><img src="images/rpm-numeric.png" alt="Numeric RPM"><br><b>RPM / Numeric</b></td>
+<td><img src="images/native-voltdeck-lower-7-retro.png" alt="RPM Watts and average cell voltage"><br><b>RPM + W + cell / Retro LCD</b></td>
+<td><img src="images/native-voltdeck-lower-2-numeric.png" alt="Numeric RPM"><br><b>RPM / Numeric</b></td>
 </tr>
 <tr>
-<td><img src="images/watts-lcd.png" alt="Standalone Watts"><br><b>Watts / Retro LCD</b></td>
-<td><img src="images/cell-volts-numeric.png" alt="Average cell voltage with a custom background"><br><b>Cell volts / Numeric</b><br>Custom background; mAh display Remaining.</td>
+<td><img src="images/native-voltdeck-lower-3-retro.png" alt="Standalone Watts"><br><b>Watts / Retro LCD</b></td>
+<td><img src="images/native-voltdeck-lower-4-numeric.png" alt="Average cell voltage on a black background"><br><b>Cell volts / Numeric</b><br>Black background; mAh display Remaining.</td>
 </tr>
 </table>
 
-22.8 V × 38.6 A gives about **880 W** electrical input power.
-21.8 V ÷ 6 cells gives **3.63 V** average cell voltage.
+The captures show 22.8 V × 24.5 A, about **559 W** electrical input power.
+22.8 V ÷ 6 cells gives **3.80 V** average cell voltage.
 Missing voltage/current gives dashes rather than invented power.
 
 ### Custom telemetry and KV estimate
 
-![Custom temperature meter](images/custom-temperature-lcd.png)
+![Custom temperature meter](images/native-voltdeck-lower-1-retro.png)
 
-Choose **Only Custom**, a temperature source, label **ESC TEMPERATURE**, range
-0–100 and decimals 0. The source supplies the actual temperature unit.
+Choose **Only Custom**, a temperature source, label **ESC TEMP**, range
+0–150 °C and decimals 0. The source supplies the actual temperature unit.
 
-![KV-based estimated RPM](images/kv-estimate-lcd.png)
+![KV-based estimated RPM](images/native-voltdeck-kv-estimate.png)
 
-This example uses **RPM / Retro LCD**, **KV x volts (est.)**, 420 KV,
-an illustrative 85% factor and **Full-pack KV**. At 22.8 V it shows
-420 × 22.8 × 0.85 ≈ **8140 rpm**. For 6S Lipo the fixed scale is
-420 × 6 × 4.20 = 10584, rounded up to **11000 rpm**.
-85% is an example, not a general propeller-load correction.
+This example uses **RPM / Retro LCD**, **RPM value = KV x volts (est.)**, **Motor KV = 500**, **Estimate factor = 90%**, **RPM scale = Manual** and **RPM max = 12000**. At 22.8 V it gives 500 × 22.8 × 0.90 = **10260 rpm**. The factor is illustrative, not a general propeller-load correction. This is estimated speed, not a measurement.
 
 ### Battery colors
 
