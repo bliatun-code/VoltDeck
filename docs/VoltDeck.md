@@ -21,8 +21,8 @@ See the [illustrated configuration guide](Configuration.md) or the
 
 ## Installation
 
-Download [VoltDeck-2026.10-v8.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v8/VoltDeck-2026.10-v8.zip) from the
-[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v8). Use the named widget package,
+Download [VoltDeck-2026.10-v9.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v9/VoltDeck-2026.10-v9.zip) from the
+[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v9). Use the named widget package,
 not the automatically generated repository source archive. The same ZIP supports
 Suite and manual installation.
 
@@ -43,7 +43,7 @@ Restart ETHOS after installation.
 On first installation, create a full-screen widget area and select **VoltDeck**. Select your model's
 telemetry sources and enter its battery capacity in the widget configuration.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.10.8**.
+Suite displays this release as **26.10.9**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 
 If the widget still shows an older version after restarting, reconnect the radio,
@@ -51,6 +51,22 @@ remove only `/scripts/VoltDeck/main.luac` and restart ETHOS again.
 
 Back up your model before updating. Keep the configured widget and existing cfg/dat files;
 saved settings, source selections and flight counts are retained.
+
+## Display style and model picture
+
+Choose **Display style = Deck** for the upright batteries and familiar instruments. **Digital** offers another instrument view focused on battery, current, consumption and power, with **Instrument focus: Power** shown as information. Deck is the default for new models and settings from versions before Digital. Previously saved Deck/Digital choices are retained.
+
+**Image source** is independent in both styles: **Selected model**, **Image file** or **Hidden**. Hidden gives the picture area to larger readings. In Deck, a selected model picture keeps the familiar composition. A failed image keeps its area and shows the error; missing telemetry also retains instrument positions.
+
+Changing style or image does not change calculation methods, telemetry sources, units, alerts, acceptance or flight logging. Inactive fields retain their saved values.
+
+**Full screen:** The widget area must fill the radio's complete LCD, including on radios with a lower resolution. A split area shows **Full screen required**; choose a full-screen area to restore the instruments. **Screen size unavailable** means the LCD dimensions could not be read; the app retries automatically. Selected sources and settings are retained.
+
+## Upgrading and rollback
+
+Before upgrading, make a complete backup of the SD card and ETHOS model storage, including every settings and flight-counter copy. Valid settings from versions before Digital open with **Deck** as the default. Previously saved Deck/Digital choices, source selections and counts are retained. Do not delete cfg/dat files to change display style.
+
+Saving settings in this release uses a newer format that 2026.10-v8 and earlier releases cannot read. Returning to those releases requires the coherent backup from before the upgrade, including model storage and all settings copies. Preserve the post-test state before restoring it. **Display style = Deck** only changes presentation; it does not downgrade the settings format.
 
 ## Remaining battery
 

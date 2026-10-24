@@ -10,12 +10,16 @@ Samme ZIP brukes til begge installasjonsmåtene:
 
 Start ETHOS på nytt etter installasjonen. Ved første installasjon velger du
 **VoltDeck** i et fullskjerms widgetfelt. Åpne **Configure widget** fra widgetmenyen
-og kontroller versjonen øverst. Suite viser denne versjonen som **26.10.8**.
+og kontroller versjonen øverst. Suite viser denne versjonen som **26.10.9**.
 Hvis installasjonen ikke vises oppdatert i Suite, gå ut av og inn i **Lua library**.
 Viser widgeten fortsatt en eldre versjon etter omstart, koble til radioen igjen,
 fjern bare `/scripts/VoltDeck/main.luac` og start ETHOS på nytt.
 Ta sikkerhetskopi av modellen før oppdatering. Behold widgeten som er satt opp og cfg/dat-filene;
 lagrede innstillinger, kildevalg og flytellere beholdes.
+
+**Fullskjerm:** Widgetfeltet må fylle hele LCD-flaten på radioen. Dette gjelder også radioer med lavere oppløsning. Et delt felt viser **Full screen required**; velg et fullskjermsfelt for å få instrumentene tilbake. **Screen size unavailable** betyr at skjermmål ikke kunne leses; appen prøver automatisk på nytt. Valgte kilder og innstillinger beholdes.
+
+Se [oppgradering og tilbakeføring](VoltDeck.md#upgrading-and-rollback) før du går tilbake til en eldre utgave.
 
 Følg gruppene nedenfor i samme rekkefølge som på radioen.
 Innstillinger og kildevalg tilhører den aktive modellen.
@@ -31,6 +35,8 @@ Oppsettsbildene viser simulatorens menyfelt. Velg sensorene som finnes i din
 modell; tabellene forklarer hva kildene skal måle. Visningseksemplene for
 hovedskjerm og flylogg bruker illustrative verdier.
 
+Enkelte menybilder viser den tidligere menyrekkefølgen. Bruk felttabellene nedenfor for **Display style** og dagens grupperekkefølge.
+
 <table>
 <tr>
 <td><img src="images/widget-menu.png" alt="VoltDecks widgetmeny"><br><b>Widgetmeny</b></td>
@@ -38,7 +44,36 @@ hovedskjerm og flylogg bruker illustrative verdier.
 </tr>
 </table>
 
-## 1. Battery
+## 1. Appearance
+
+![Utseendeinnstillinger](images/voltdeck-setup-appearance.png)
+
+| Felt | Hva det endrer |
+|---|---|
+| Display style | **Deck** eller **Digital**; Digital viser informasjonslinjen **Instrument focus: Power**. |
+| Background | **Radio theme** følger ETHOS-fargene; **Black** gir svart bakgrunn; **Custom** bruker din bakgrunnsfarge. |
+| Background color | Aktivt med **Custom**. |
+| Accent color | Aktivt med **Black** eller **Custom**. **Radio theme** bruker temaets aksentfarge. |
+| Font file | Valgfri fontsti. La feltet være tomt for radioens innebygde fonter. |
+| Image source | **Selected model** gjenbruker modellbildet; **Image file** velger et separat bilde; **Hidden** skjuler det. |
+| Image file | Aktivt med **Image file**. Velg bilde fra `/bitmaps/models`. |
+
+Velg **Display style = Deck** for de stående batteriene og den kjente instrumenteringen. **Digital** gir en alternativ instrumentvisning med **Instrument focus: Power**. Fokuslinjen er informasjon om denne visningen. Deck er standard for nye modeller og innstillinger fra utgaver før Digital. Tidligere lagrede Deck/Digital-valg beholdes.
+
+**Image source** er et eget valg i begge stiler: **Selected model**, **Image file** eller **Hidden**. Med Hidden brukes bildeplassen til større målinger. I Deck beholder et valgt modellbilde den kjente sammensetningen. En bildefeil beholder bildeplassen og viser feilen; manglende telemetri flytter heller ikke instrumentene.
+
+Stil- og bildevalg endrer ikke beregningsmetoder, telemetrikilder, enheter, varsler, godkjenning eller flylogg. Grå felt beholder sine lagrede verdier.
+
+Bruk vanlig **8-bit RGB eller RGBA PNG**. **290 × 191** passer bildefeltet;
+**480 × 272** og **480 × 320** støttes også. Sideforholdet beholdes.
+Grensen er 160 000 piksler, så **800 × 480** er for stort. Indekserte/palettbilder
+og PNG med 16-bit fargekanaler støttes ikke. Gjennomsiktighet lar bakgrunnen
+synes gjennom.
+
+Eksempelbildet [Ultimate AMR](images/ultimate-amr.png) er 290 × 191;
+se [NOTICE](../NOTICE.md) for bruksvilkår.
+
+## 2. Battery
 
 ![Batteriinnstillinger](images/voltdeck-setup-battery.png)
 
@@ -167,29 +202,7 @@ En bestått kontroll garanterer ikke en bestemt reserve ved landing.
 </tr>
 </table>
 
-## 2. Appearance
-
-![Utseendeinnstillinger](images/voltdeck-setup-appearance.png)
-
-| Felt | Hva det endrer |
-|---|---|
-| Background | **Radio theme** følger ETHOS-fargene; **Black** gir svart bakgrunn; **Custom** bruker din bakgrunnsfarge. |
-| Background color | Aktivt med **Custom**. |
-| Accent color | Aktivt med **Black** eller **Custom**. **Radio theme** bruker temaets aksentfarge. |
-| Font file | Valgfri fontsti. La feltet være tomt for radioens innebygde fonter. |
-| Image source | **Selected model** gjenbruker modellbildet; **Image file** velger et separat bilde; **Hidden** skjuler det. |
-| Image file | Aktivt med **Image file**. Velg bilde fra `/bitmaps/models`. |
-
-Bruk vanlig **8-bit RGB eller RGBA PNG**. **290 × 191** passer bildefeltet;
-**480 × 272** og **480 × 320** støttes også. Sideforholdet beholdes.
-Grensen er 160 000 piksler, så **800 × 480** er for stort. Indekserte/palettbilder
-og PNG med 16-bit fargekanaler støttes ikke. Gjennomsiktighet lar bakgrunnen
-synes gjennom.
-
-Eksempelbildet [Ultimate AMR](images/ultimate-amr.png) er 290 × 191;
-se [NOTICE](../NOTICE.md) for bruksvilkår.
-
-## 3. Battery alert
+### Alerts i Battery
 
 ![Batterivarsling](images/voltdeck-setup-alert.png)
 
@@ -205,7 +218,7 @@ Neste varsel venter til valgt lyd er ferdig. Kort tilbakekomst eller manglende
 avlesninger starter ikke venteintervallet på nytt. Preview spiller ikke varsler.
 Disse valgene endrer ikke ETHOS sine egne telemetrialarmer.
 
-## 4. Telemetry
+## 3. Telemetry
 
 ![Telemetrikilder](images/voltdeck-setup-telemetry.png)
 
@@ -243,7 +256,7 @@ når modelltelemetrien er borte.
 
 ![Manglende modelltelemetri](images/telemetry-unavailable.png)
 
-## 5. RF signals
+## 4. RF signals
 
 ![RF-profiler](images/voltdeck-setup-rf.png)
 
@@ -276,7 +289,7 @@ er tilgjengelige fordi hovedskjerm og graf kan bruke ulike typer RF-kilde.
 Dette er visuelle grenser. De setter ikke radioens alarmer;
 95% er VoltDecks tidlige VFR-markering, ikke en ETHOS-alarmgrense.
 
-## 6. Lower deck
+## 5. Lower deck
 
 ![Nedre visning](images/voltdeck-setup-lower-deck.png)
 
@@ -314,8 +327,9 @@ Temperaturkilden bør ha °C som enhet; målergrensene kan for eksempel være
 | 2 | RPM | Custom | Watts |
 | 3 | RPM | Watts | Custom |
 
-Nedre visning har maksimalt tre rader. Med **RPM + W + cell** erstatter en valgt
-Custom-kilde celleraden. Fjernes Custom-kilden, kommer celleraden tilbake.
+Med **Deck + Image source = Hidden** fordeles de valgte verdiene over den nedre instrumentstripen. **RPM + W + cell** sammen med Custom viser alle fire verdier. **Custom position** 1–3 beholdes som plassering, og Custom får ikke en ny MAX-verdi.
+
+Deck med bilde og Digital beholder maksimalt tre rader: med **RPM + W + cell** erstatter Custom celleraden. Fjernes Custom, kommer celleraden tilbake. **Lower deck > Show = Hidden** skjuler hele nedre instrumentstripe og gir hovedmålingene mer plass.
 En valgt kilde beholder raden ved telemetribortfall og viser ukjent verdi til
 målingene kommer tilbake.
 
@@ -354,7 +368,7 @@ sine grenser.
 
 ![LiHV-cellevolt ved fulladet grense](images/cell-voltage-lihv-full.png)
 
-## 7. Motor / RPM
+## 6. Motor / RPM
 
 ![Motor- og RPM-innstillinger](images/voltdeck-setup-rpm.png)
 
@@ -372,7 +386,7 @@ Det måler ikke akselturtallet. Visningen er merket **RPM ESTIMATE**.
 Faktoren gjelder estimert visning; flyloggens **KV potential** er uten denne
 korreksjonen.
 
-## 8. Flight log
+## 7. Flight log
 
 ![Flylogginnstillinger](images/voltdeck-setup-flight.png)
 
@@ -451,7 +465,7 @@ Hold motoren sikkert deaktivert mens du kontrollerer gassendepunkter.
 
 ![Flydiagnostikk med Always on som ARM-kilde og null gass](images/flight-diagnostics-always-on.png)
 
-## 9. Preview
+## 8. Preview
 
 **Preview** gir eksempelverdier for å se på utformingen. Det teller ikke flyginger,
 spiller ikke varsler og endrer ikke reelle forbrukssperrer eller maksimumsverdier.

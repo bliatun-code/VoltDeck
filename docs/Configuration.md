@@ -7,6 +7,10 @@ click **Install scripts**. The same ZIP supports manual installation into `/scri
 Follow the [installation steps](VoltDeck.md#installation), restart ETHOS and check
 the version at the top of **Configure widget**. Keep the configured widget and existing cfg/dat files when updating.
 
+**Full screen:** The widget area must fill the radio's complete LCD, including on radios with a lower resolution. A split area shows **Full screen required**; choose a full-screen area to restore the instruments. **Screen size unavailable** means the LCD dimensions could not be read; the app retries automatically. Selected sources and settings are retained.
+
+See [upgrading and rollback](VoltDeck.md#upgrading-and-rollback) before returning to an older release.
+
 On first installation, select **VoltDeck** in a full-screen widget area.
 Open **Configure widget** from the widget menu and follow the groups below in their radio-menu order.
 Settings and source selections belong to the active model.
@@ -23,6 +27,8 @@ The setup pictures show the simulator's menu fields. Select the sensors fitted
 to your own model; the tables explain what each source must measure.
 The dashboard and flight-log examples use illustrative readings.
 
+Some menu images show the earlier menu arrangement. Use the field tables below for **Display style** and the current group order.
+
 <table>
 <tr>
 <td><img src="images/widget-menu.png" alt="VoltDeck widget menu"><br><b>Widget menu</b></td>
@@ -30,7 +36,36 @@ The dashboard and flight-log examples use illustrative readings.
 </tr>
 </table>
 
-## 1. Battery
+## 1. Appearance
+
+![Appearance settings](images/voltdeck-setup-appearance.png)
+
+| Field | What it changes |
+|---|---|
+| Display style | **Deck** or **Digital**; Digital shows **Instrument focus: Power** as information. |
+| Background | **Radio theme** follows ETHOS colors; **Black** uses a black background; **Custom** uses your background color. |
+| Background color | Active with **Custom**. |
+| Accent color | Active with **Black** or **Custom**. **Radio theme** supplies its own accent. |
+| Font file | Optional font path. Leave blank for native ETHOS fonts. |
+| Image source | **Selected model** reuses the model picture; **Image file** selects a separate picture; **Hidden** removes it. |
+| Image file | Active with **Image file**. Choose an image from `/bitmaps/models`. |
+
+Choose **Display style = Deck** for the upright batteries and familiar instruments. **Digital** offers another instrument view focused on battery, current, consumption and power, with **Instrument focus: Power** shown as information. Deck is the default for new models and settings from versions before Digital. Previously saved Deck/Digital choices are retained.
+
+**Image source** is independent in both styles: **Selected model**, **Image file** or **Hidden**. Hidden gives the picture area to larger readings. In Deck, a selected model picture keeps the familiar composition. A failed image keeps its area and shows the error; missing telemetry also retains instrument positions.
+
+Changing style or image does not change calculation methods, telemetry sources, units, alerts, acceptance or flight logging. Inactive fields retain their saved values.
+
+Use an ordinary **8-bit RGB or RGBA PNG**. **290 × 191** fits the picture area;
+**480 × 272** and **480 × 320** are also supported. Aspect ratio is preserved.
+The limit is 160,000 pixels, so **800 × 480** is too large. Indexed/palette and
+16-bit-channel PNGs are unsupported. Transparency lets the chosen background
+show through.
+
+The example [Ultimate AMR artwork](images/ultimate-amr.png) is 290 × 191;
+see [NOTICE](../NOTICE.md) for its terms.
+
+## 2. Battery
 
 ![Battery settings](images/voltdeck-setup-battery.png)
 
@@ -159,29 +194,7 @@ A passed check does not guarantee a particular reserve at landing.
 </tr>
 </table>
 
-## 2. Appearance
-
-![Appearance settings](images/voltdeck-setup-appearance.png)
-
-| Field | What it changes |
-|---|---|
-| Background | **Radio theme** follows ETHOS colors; **Black** uses a black background; **Custom** uses your background color. |
-| Background color | Active with **Custom**. |
-| Accent color | Active with **Black** or **Custom**. **Radio theme** supplies its own accent. |
-| Font file | Optional font path. Leave blank for native ETHOS fonts. |
-| Image source | **Selected model** reuses the model picture; **Image file** selects a separate picture; **Hidden** removes it. |
-| Image file | Active with **Image file**. Choose an image from `/bitmaps/models`. |
-
-Use an ordinary **8-bit RGB or RGBA PNG**. **290 × 191** fits the picture area;
-**480 × 272** and **480 × 320** are also supported. Aspect ratio is preserved.
-The limit is 160,000 pixels, so **800 × 480** is too large. Indexed/palette and
-16-bit-channel PNGs are unsupported. Transparency lets the chosen background
-show through.
-
-The example [Ultimate AMR artwork](images/ultimate-amr.png) is 290 × 191;
-see [NOTICE](../NOTICE.md) for its terms.
-
-## 3. Battery alert
+### Alerts in Battery
 
 ![Battery alert settings](images/voltdeck-setup-alert.png)
 
@@ -197,7 +210,7 @@ Repetition waits for the selected sound to finish. Brief recovery or missing
 readings do not restart the waiting interval. Preview does not play alerts.
 These settings do not change ETHOS's own telemetry alarms.
 
-## 4. Telemetry
+## 3. Telemetry
 
 ![Telemetry sources](images/voltdeck-setup-telemetry.png)
 
@@ -235,7 +248,7 @@ model telemetry is absent.
 
 ![Unavailable model telemetry](images/telemetry-unavailable.png)
 
-## 5. RF signals
+## 4. RF signals
 
 ![RF profile settings](images/voltdeck-setup-rf.png)
 
@@ -268,7 +281,7 @@ available because the dashboard and graph can use different kinds of RF source.
 These are visual thresholds. They do not configure the radio's alarms;
 95% is VoltDeck's early VFR marking, not an ETHOS alarm setting.
 
-## 6. Lower deck
+## 5. Lower deck
 
 ![Lower-deck settings](images/voltdeck-setup-lower-deck.png)
 
@@ -306,8 +319,9 @@ alarm. **Only Custom** shows that source alone.
 | 2 | RPM | Custom | Watts |
 | 3 | RPM | Watts | Custom |
 
-The lower deck has at most three rows. With **RPM + W + cell**, selecting a
-Custom source replaces the cell row. Clearing Custom brings the cell row back.
+With **Deck + Image source = Hidden**, the selected values share the lower instrument strip. **RPM + W + cell** together with Custom shows all four values. **Custom position** 1–3 remains the placement choice, and Custom gains no new MAX reading.
+
+Deck with a picture and Digital retain at most three rows: with **RPM + W + cell**, Custom replaces the cell row. Clearing Custom restores it. **Lower deck > Show = Hidden** hides the lower instrument strip and gives the main readings more space.
 A selected source keeps its row during a telemetry gap and shows an unknown
 value until readings return.
 
@@ -346,7 +360,7 @@ its limits.
 
 ![LiHV cell voltage at its full-pack boundary](images/cell-voltage-lihv-full.png)
 
-## 7. Motor / RPM
+## 6. Motor / RPM
 
 ![Motor and RPM settings](images/voltdeck-setup-rpm.png)
 
@@ -363,7 +377,7 @@ KV × live pack voltage estimates electrical speed potential. It does not measur
 shaft speed. The dashboard labels it **RPM ESTIMATE**. Its factor is separate
 from the flight log's uncorrected **KV potential**.
 
-## 8. Flight log
+## 7. Flight log
 
 ![Flight-log settings](images/voltdeck-setup-flight.png)
 
@@ -443,7 +457,7 @@ control endpoints.
 
 ![Flight diagnostics with an Always on ARM source and zero throttle](images/flight-diagnostics-always-on.png)
 
-## 9. Preview
+## 8. Preview
 
 **Preview** supplies example readings for exploring the layout. It does not
 count flights, play alerts or change live consumption guards and peaks.

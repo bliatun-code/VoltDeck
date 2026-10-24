@@ -1,11 +1,11 @@
 # VoltDeck
 A full-screen battery, telemetry and power dashboard for FrSky ETHOS 1.6.6 and 26.1.2.
 
-**VoltDeck 2026.10-v8: latest release.**
+**VoltDeck 2026.10-v9: latest release.**
 
 Physical radio testing of this version passed.
 
-[Download VoltDeck-2026.10-v8.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v8/VoltDeck-2026.10-v8.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v8)
+[Download VoltDeck-2026.10-v9.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v9/VoltDeck-2026.10-v9.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v9)
 
 ![VoltDeck: RPM and electrical power](docs/images/rpm-watts-lcd.png)
 
@@ -15,6 +15,16 @@ The screenshots use illustrative values.
 [Norsk veiledning](docs/Konfigurasjon-norsk.md) |
 [Installation and usage](docs/VoltDeck.md) |
 [Lua source](scripts/VoltDeck/main.lua)
+
+## Display style and model picture
+
+Choose **Display style = Deck** for the upright batteries and familiar instruments. **Digital** offers another instrument view focused on battery, current, consumption and power, with **Instrument focus: Power** shown as information. Deck is the default for new models and settings from versions before Digital. Previously saved Deck/Digital choices are retained.
+
+**Image source** is independent in both styles: **Selected model**, **Image file** or **Hidden**. Hidden gives the picture area to larger readings. In Deck, a selected model picture keeps the familiar composition. A failed image keeps its area and shows the error; missing telemetry also retains instrument positions.
+
+Changing style or image does not change calculation methods, telemetry sources, units, alerts, acceptance or flight logging. Inactive fields retain their saved values.
+
+**Full screen:** The widget area must fill the radio's complete LCD, including on radios with a lower resolution. A split area shows **Full screen required**; choose a full-screen area to restore the instruments. **Screen size unavailable** means the LCD dimensions could not be read; the app retries automatically. Selected sources and settings are retained.
 
 ## Choose your lower deck
 
@@ -35,12 +45,13 @@ The screenshots use illustrative values.
 
 ## Highlights
 
+- Deck and Digital display styles, with an independent model-picture choice.
 - Active model name and optional reuse of its selected model picture.
 - Radio theme, black or user-selected background and accent colors.
 - Remaining battery from consumed mAh; optional percent source or voltage estimate.
 - Green / yellow / orange / red battery thresholds and configurable low-battery WAV.
 - Measured RPM, a labelled KV estimate, Watts, average cell voltage or custom telemetry.
-- Numeric and retro LCD presentation; one, two or three supported metrics.
+- Numeric and retro LCD Lower deck presentation; Deck with Hidden image can show RPM, Watts, cell voltage and Custom together.
 - Custom telemetry alongside a preset, with a choice of row 1, 2 or 3.
 - Optional per-model flight counter, session peaks and last-flight RF graphs.
 - Optional automatic flight-log opening after sustained pack-voltage loss.
@@ -49,7 +60,7 @@ The screenshots use illustrative values.
 
 ## Install VoltDeck
 
-Download [VoltDeck-2026.10-v8.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v8/VoltDeck-2026.10-v8.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
+Download [VoltDeck-2026.10-v9.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v9/VoltDeck-2026.10-v9.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
 
 - **FrSky Suite:** Connect the radio, open **Lua library**, choose **Install Lua scripts**, select the ZIP and click **Install scripts**.
 - **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all extracted files into it. The final Lua path is `/scripts/VoltDeck/main.lua`.
@@ -58,13 +69,14 @@ Restart ETHOS after installation.
 On first installation, select **VoltDeck** in a full-screen widget area and follow the
 [illustrated guide](docs/Configuration.md) for your model's sources and battery settings.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.10.8**.
+Suite displays this release as **26.10.9**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 If the widget still shows an older version after restarting, follow the
 [installation troubleshooting](docs/VoltDeck.md#installation).
 
-Back up your model before updating. Keep the configured widget and existing cfg/dat files;
-saved settings, source selections and flight counts are retained.
+Back up the SD card and ETHOS model storage together before updating. Keep the configured
+widget and existing cfg/dat files; saved settings, sources and flight counts are retained.
+See [upgrading and rollback](docs/VoltDeck.md#upgrading-and-rollback) before returning to an older release.
 
 ## Pack sessions and last flight
 

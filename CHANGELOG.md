@@ -1,5 +1,17 @@
 # Changelog
 
+
+## 2026.10-v9 - release, 2026-10-24
+
+- Add optional Digital Power instruments under Appearance > Display style; Deck remains the default for existing and new models.
+- Give Deck an instrument layout when Image source is Hidden; retain the familiar photo layout and upright batteries when a picture is selected.
+- Keep the model-picture choice independent of style. Image errors and unavailable telemetry retain their instrument space.
+- Require a full-screen widget area relative to the radio's LCD; show a setup notice in split areas and restore instruments when full-screen.
+- Keep all eight Lower deck choices, Numeric/Retro LCD and Custom positions; Deck with Hidden image can show RPM, Watts, cell voltage and Custom together.
+- Start configuration with Appearance and keep battery alerts inside Battery.
+- Retain calculation methods, source selections, acceptance, sessions, logging, alarms and the current menu background hold.
+- Read earlier valid model settings; keep a complete pre-upgrade backup for returning to pre-Digital releases.
+
 ## 2026.10-v8 - release, 2026-10-11
 
 - Install and upgrade using a single ZIP through FrSky Suite Lua library or manual copying.

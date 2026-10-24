@@ -5,7 +5,7 @@
 -- Artwork is drawn natively. Model images and optional alert audio are user-selected.
 
 local RenderLCD = lcd
-local VERSION = "2026.10-v8"
+local VERSION = "2026.10-v9"
 local MAX_IMAGE_PIXELS = 160000
 local BITMAP_RESERVE = 65536
 local FLIGHT_SESSION
@@ -70,7 +70,7 @@ local SETTINGS = {
     "highThrottleSeconds", "endDelay", "throttleMinimum", "throttleMaximum",
     "rfWarnDB", "rfCriticalDB", "rfWarnPercent", "rfCriticalPercent",
     "rf1Profile", "rf2Profile", "rf2WarnDB", "rf2CriticalDB", "rf2WarnPercent", "rf2CriticalPercent",
-    "autoLogEnabled", "autoLogDelay", "customPosition",
+    "autoLogEnabled", "autoLogDelay", "customPosition", "displayStyle",
 }
 local SETTING_DEFS = {
     {"chemistry", 1, 1, #TYPES},
@@ -130,6 +130,12 @@ local SETTING_DEFS = {
 local PREVIOUS_SETTING_DEFS = {}
 for index, definition in ipairs(SETTING_DEFS) do PREVIOUS_SETTING_DEFS[index] = definition end
 SETTING_DEFS[#SETTING_DEFS + 1] = {"customPosition", 3, 1, 3}
+-- VD6 adds Custom position; keep its strict field count when importing it.
+local DECK_SETTING_DEFS = {}
+for index, definition in ipairs(SETTING_DEFS) do DECK_SETTING_DEFS[index] = definition end
+-- Display choices never alter telemetry, methods or operational state. Existing
+-- VD5/VD6 records omit this field and retain the complete Deck presentation.
+SETTING_DEFS[#SETTING_DEFS + 1] = {"displayStyle", 1, 1, 2}
 local SETTING_MAP = {}
 for _, definition in ipairs(SETTING_DEFS) do SETTING_MAP[definition[1]] = definition end
 
@@ -477,6 +483,7 @@ function DisplayFrame.replay(frame)
         if command.color ~= nil and command.color ~= color then lcd.color(command.color); color = command.color end
         if command[1]=="roundedShape" then DisplayFrame.roundedShape(command[2],command.color)
         elseif command[1]=="signalBar" then DisplayFrame.signalBar(command[2],command.color)
+        elseif command[1]=="flowSegments" then DisplayFrame.flowSegments(command[2])
         else lcd[command[1]](unpackFrame(command, 2, command.n + 1)) end
     end
 end
@@ -813,9 +820,11 @@ local CONFIG_LIMIT = 4096
 local CONFIG_STATE
 
 local function configRecord(key, bytes)
-    local current = type(bytes) == "string" and bytes:match("^VD6|") ~= nil
+    local format = type(bytes) == "string" and bytes:match("^(VD%d+)|")
+    local definitions = format == "VD7" and SETTING_DEFS
+        or format == "VD6" and DECK_SETTING_DEFS or PREVIOUS_SETTING_DEFS
     return DeckCore.decodeSettings(key, bytes, CONFIG_LIMIT, digest, identityHex, HEX_DECODE,
-        current and "VD6" or "VD5", current and SETTING_DEFS or PREVIOUS_SETTING_DEFS)
+        format == "VD7" and "VD7" or format == "VD6" and "VD6" or "VD5", definitions)
 end
 
 local function configLoad(key)
@@ -870,7 +879,7 @@ local function configSave(widget)
     if record and record.payload ~= widget.configPayload then return false, "Settings changed in another instance; reopen" end
     local sequence = (record and record.sequence or 0) + 1
     if sequence > 1000000000 then return false, "Settings generation limit reached" end
-    local body = "VD6|" .. identityHex(key) .. "|" .. sequence .. "\n" .. payload
+    local body = "VD7|" .. identityHex(key) .. "|" .. sequence .. "\n" .. payload
     local bytes = body .. "CHECK=" .. tostring(digest(body)) .. "\n"
     if #bytes > CONFIG_LIMIT then return false, "Settings file too large" end
     local path = base .. (sequence % 2 == 1 and "a.cfg" or "b.cfg")
@@ -947,6 +956,7 @@ local function read(widget)
         widget[key] = type(value) == "string" and value or ""
     end
     widget.imageMode = numberSetting("imageMode", 1, 1, 3)
+    widget.displayStyle = numberSetting("displayStyle", 1, 1, 2)
     widget.alarmEstimate = settingRead("alarmEstimate") == true
     widget.batteryMethod = numberSetting("batteryMethod", 1, 1, 3)
     for _, key in ipairs(SOURCE_KEYS) do
@@ -2112,6 +2122,59 @@ local function text(x, y, value, width, height, color, align, customFont, small)
     return tw, th
 end
 
+-- Unsupported widget areas draw a small notice, never an instrument frame.
+-- A real full-screen match is independent of focus and preserves its old path.
+function DisplayControl.fullScreenNotice(widget, width, height, appName)
+    local state = widget.displayControl
+    local known = state and finite(state.lcdWidth) and finite(state.lcdHeight)
+        and state.lcdWidth > 0 and state.lcdHeight > 0
+    if known and width == state.lcdWidth and height == state.lcdHeight then return false end
+    DisplayControl.clear(widget)
+    if not known then
+        -- Invalid partial cache pairs must not prevent the existing lookup retry.
+        if state then state.lcdWidth, state.lcdHeight = nil, nil end
+        local clock = os.clock()
+        if finite(clock) then widget.focusRepaintAt = clock + 1 end
+    end
+    local previousLCD, previousFrame = RenderLCD, DisplayFrame.active
+    RenderLCD, DisplayFrame.active = lcd, nil
+    local ok, problem = pcall(function()
+        local colors = palette(widget)
+        lcd.color(colors.background)
+        lcd.drawFilledRectangle(0, 0, width, height)
+        local padding = math.min(16, width * 0.04, height * 0.06)
+        local availableWidth = math.max(0.01, width - 2 * padding)
+        local availableHeight = math.max(0, height - 2 * padding)
+        local _, _, _, minimum = DeckCore.fitText("0", availableWidth, 1, nil, true)
+        if not finite(minimum) or minimum <= 0 then return end
+        local gap = 4
+        local count = math.min(3, math.floor((availableHeight + gap) / (minimum + gap)))
+        if count < 1 then return end
+        local title = known and "Full screen required" or "Screen size unavailable"
+        local hint = known and "Use a full-screen widget area" or "Retrying automatically"
+        local rows = count == 1 and {title} or count == 2 and {appName, title} or {appName, title, hint}
+        local rowHeight = (availableHeight - (count - 1) * gap) / count
+        for index = 1, count do
+            local font, fitted, tw, th = DeckCore.fitText(rows[index], availableWidth, rowHeight, nil, index == 3)
+            if fitted ~= "" and th <= rowHeight then
+                local x = math.max(0, (width - tw) / 2)
+                local y = padding + (index - 1) * (rowHeight + gap) + (rowHeight - th) / 2
+                y = math.max(0, math.min(y, height - th))
+                lcd.font(font)
+                lcd.color(index == 3 and colors.secondary or colors.foreground)
+                lcd.drawText(math.floor(x + 0.5), math.floor(y + 0.5), fitted, LEFT)
+            end
+        end
+    end)
+    RenderLCD, DisplayFrame.active = previousLCD, previousFrame
+    if previousFrame then
+        if previousFrame.font ~= nil then lcd.font(previousFrame.font) end
+        if previousFrame.color ~= nil then lcd.color(previousFrame.color) end
+    end
+    if not ok then error(problem, 0) end
+    return true
+end
+
 local function valueText(value, decimals, missing)
     if value == nil then return missing or "--" end
     return string.format("%." .. tostring(decimals or 0) .. "f", value)
@@ -2152,9 +2215,11 @@ local function drawSignal(widget, colors, x, y, value, unit, label, channel, sx,
     text(x, y + 14 * sy, valueText(value, 0) .. (unit or ""), 99 * sx, 23 * sy, tone)
 end
 
-local function drawBattery(widget, colors, sx, sy)
+local function drawBattery(widget, colors, sx, sy, geometry)
     local data = widget.data
-    local x, y, w, h = 630 * sx, 150 * sy, 136 * sx, 222 * sy
+    local x, y, w, h = (geometry and geometry.x or 630) * sx,
+        (geometry and geometry.y or 150) * sy,
+        (geometry and geometry.w or 136) * sx, (geometry and geometry.h or 222) * sy
     local color = batteryColor(data.percent)
     local scale = math.min(sx, sy)
     rounded(x + 44 * sx, y - 14 * sy, 48 * sx, 12 * sy, 4 * scale, colors.border)
@@ -2174,9 +2239,10 @@ local function drawBattery(widget, colors, sx, sy)
             end
         end
     end
-    text(x + w / 2, 390 * sy, valueText(data.percent, 0) .. "%",
-        152 * sx, 57 * sy, color, CENTERED, widget.valueFont)
-    text(x + w / 2, 450 * sy, data.estimated and "VOLTAGE ESTIMATE" or "REMAINING", 152 * sx, 16 * sy,
+    text(x + w / 2, (geometry and geometry.percentY or 390) * sy, valueText(data.percent, 0) .. "%",
+        152 * sx, (geometry and geometry.percentH or 57) * sy, color, CENTERED, widget.valueFont)
+    text(x + w / 2, (geometry and geometry.labelY or 450) * sy,
+        data.estimated and "VOLTAGE ESTIMATE" or "REMAINING", 152 * sx, 16 * sy,
         colors.secondary, CENTERED, nil, true)
 end
 
@@ -2196,7 +2262,7 @@ local function metricValues(widget, kind)
     return data.voltagePercent, "VOLTAGE ESTIMATE", "%", 0, 100, 0
 end
 local DECK_METRICS = {{1}, {2}, {3}, {4}, {5}, {2, 3}, {2, 3, 4}, {}}
-local function resolvedDeckKinds(widget)
+local function resolvedDeckKinds(widget, preserveAll)
     if not validWidget(widget) then return {} end
     local mode = widget.deckMode
     if mode == 8 then return {} end
@@ -2206,7 +2272,7 @@ local function resolvedDeckKinds(widget)
     local custom = selectedSource(widget.bottomSource)
     if not validWidget(widget) then return {} end
     if custom then
-        if #kinds == 3 then table.remove(kinds) end
+        if #kinds == 3 and not preserveAll then table.remove(kinds) end
         table.insert(kinds, clamp(widget.customPosition or 3, 1, #kinds + 1), 1)
     end
     return kinds
@@ -2472,6 +2538,238 @@ local function keepFocus(widget, width, height)
     DisplayControl.paint(widget, width, height)
 end
 
+-- Digital is an opt-in presentation of the already-qualified data snapshot.
+-- Lower deck keeps its original renderer and full configuration contract.
+local DigitalPower = {}
+function DigitalPower.reading(widget, colors, sx, sy, x, y, width, large, label, value, decimals, unit)
+    text(x * sx, y * sy, label, width * sx, 18 * sy, colors.secondary, LEFT, nil, true)
+    local unitWidth = unit == "mAh" and 64 or 42
+    local tw, th = text(x * sx, (y + 25) * sy, valueText(value, decimals),
+        (width - unitWidth) * sx, (large and 62 or 48) * sy,
+        colors.foreground, LEFT, widget.valueFont)
+    text(x * sx + tw + 6 * sx, (y + 25) * sy + math.max(0, th - 24 * sy),
+        unit, unitWidth * sx - 6 * sx, 26 * sy, colors.secondary, LEFT, nil, true)
+end
+
+function DigitalPower.draw(widget, colors, sx, sy)
+    local data, hidden = widget.data, widget.imageMode == 3
+    -- Only an explicit Hidden choice releases this area. A missing bitmap keeps
+    -- the photo geometry stable, including during loss of model telemetry.
+    if not hidden then
+        if widget.modelImage then
+            local iw, ih = widget.imageWidth or 290, widget.imageHeight or 191
+            local fit = math.min(290 * sx / iw, 191 * sy / ih)
+            RenderLCD.drawBitmap(round(24 * sx + (290 * sx - iw * fit) / 2),
+                round(131 * sy + (191 * sy - ih * fit) / 2), widget.modelImage,
+                round(iw * fit), round(ih * fit))
+        else
+            text(169 * sx, 203 * sy, "MODEL IMAGE", 264 * sx, 22 * sy,
+                colors.secondary, CENTERED, nil, true)
+            text(169 * sx, 237 * sy, widget.imageError or "Choose model image in Ethos", 264 * sx, 19 * sy,
+                colors.secondary, CENTERED, nil, true)
+            rect(135 * sx, 178 * sy, 68 * sx, 2 * sy, colors.accent)
+        end
+    end
+    local x, width, gap = hidden and 24 or 349, hidden and 752 or 427, 20
+    local column = (width - gap) / 2
+    DigitalPower.reading(widget, colors, sx, sy, x, 127, column, hidden,
+        "PACK POWER (INPUT)", data.watts, 0, "W")
+    DigitalPower.reading(widget, colors, sx, sy, x + column + gap, 127, column, hidden,
+        "CURRENT", data.current, 1, "A")
+    rect(x * sx, 223 * sy, width * sx, math.max(1, sy), colors.track)
+    DigitalPower.reading(widget, colors, sx, sy, x, 235, column, hidden,
+        "PACK VOLTAGE", data.voltage, 1, "V")
+    local mah = data.used
+    if widget.mahDisplay == 2 then mah = data.remaining end
+    DigitalPower.reading(widget, colors, sx, sy, x + column + gap, 235, column, hidden,
+        widget.mahDisplay == 2 and "REMAINING CAPACITY" or "CONSUMED", mah, 0, "mAh")
+    if widget.preview then
+        text(24 * sx, 324 * sy, "PREVIEW", 285 * sx, 17 * sy, colors.accent, LEFT, nil, true)
+    elseif data.voltage == nil and data.used == nil then
+        text(24 * sx, 324 * sy, "Select telemetry sensors", 285 * sx, 17 * sy,
+            colors.secondary, LEFT, nil, true)
+    end
+
+    -- Compact reserve shares the original right-hand status area; the complete
+    -- left-hand Lower deck, including its original meter geometry, stays intact.
+    local color = batteryColor(data.percent)
+    text(349 * sx, 347 * sy, data.estimated and "VOLTAGE ESTIMATE" or "BATTERY REMAINING",
+        280 * sx, 17 * sy, colors.secondary, LEFT, nil, true)
+    text(776 * sx, 340 * sy, valueText(data.percent, 0) .. "%", 145 * sx, 31 * sy,
+        color, RIGHT, widget.valueFont)
+    local count, gap = 20, 3 * sx
+    local width = (427 * sx - (count - 1) * gap) / count
+    for index = 1, count do
+        local fill = data.percent and clamp(data.percent / 5 - (index - 1), 0, 1) or 0
+        local x = 349 * sx + (index - 1) * (width + gap)
+        rect(x, 376 * sy, width, 15 * sy, colors.track)
+        if data.percent ~= nil and fill > 0 then rect(x, 376 * sy, width * fill, 15 * sy, color) end
+    end
+    if data.counterReset and widget.batteryMethod == 1 and not widget.preview then
+        text(349 * sx, 409 * sy, "COUNTER RESET: CHECK PACK", 427 * sx, 18 * sy, COLORS.red, LEFT, nil, true)
+    elseif data.packCheck and not widget.preview then
+        text(349 * sx, 409 * sy, data.packCheck == "cells" and "CHECK CELLS/TYPE" or "CHECK PACK/COUNTER",
+            427 * sx, 18 * sy, COLORS.red, LEFT, nil, true)
+    elseif data.packCheckPending and not widget.preview then
+        text(349 * sx, 409 * sy, "CHECKING PACK", 427 * sx, 18 * sy, colors.secondary, LEFT, nil, true)
+    elseif data.low and not widget.preview then
+        rounded(349 * sx, 414 * sy, 5 * sx, 5 * sy, 2 * math.min(sx, sy), COLORS.orange)
+        text(361 * sx, 409 * sy, "LOW BATTERY", 415 * sx, 18 * sy, COLORS.orange, LEFT, nil, true)
+    elseif widget.rx2Source then
+        text(349 * sx, 409 * sy, "RX2  " .. valueText(data.rx2, 1) .. " V",
+            427 * sx, 19 * sy, colors.secondary, LEFT, nil, true)
+    end
+    if widget.logEnabled then
+        text(349 * sx, 447 * sy, "FLIGHTS " .. tostring(data.logCount or 0) .. " | " .. (data.logState or "Ready"),
+            427 * sx, 18 * sy, colors.accent, LEFT, nil, true)
+    end
+    drawBottom(widget, colors, sx, sy)
+end
+
+-- A/Flyt applies only to Deck with an explicitly hidden image. Photo Deck and
+-- Digital retain their original geometry and three-slot Lower deck behavior.
+local DeckFlow = {reserve = {x = 630, y = 136, w = 136, h = 160,
+    percentY = 304, percentH = 42, labelY = 351},
+    compactReserve = {x = 630, y = 126, w = 136, h = 160,
+        percentY = 294, percentH = 34, labelY = 334}}
+
+-- Flow's four full-width Retro fields contain up to 96 segment rectangles.
+-- Capture their resolved integer geometry/colors as four immutable batches,
+-- avoiding 96 general proxy commands in the first held paint. Replay still
+-- draws every original native segment; no live widget/data state is retained.
+function DeckFlow.segments(batch)
+    for offset = 1, #batch, 5 do
+        lcd.color(batch[offset + 4])
+        lcd.drawFilledRectangle(batch[offset], batch[offset + 1], batch[offset + 2], batch[offset + 3])
+    end
+end
+DisplayFrame.flowSegments = DeckFlow.segments
+
+function DeckFlow.reading(widget, colors, sx, sy, x, y, width, height, label, value, decimals, unit)
+    text(x * sx, y * sy, label, width * sx, 18 * sy, colors.secondary, LEFT, nil, true)
+    text(x * sx, y * sy + math.max(26 * sy, 16), valueText(value, decimals) .. " " .. unit,
+        width * sx, height * sy, colors.foreground, LEFT, widget.valueFont)
+end
+
+function DeckFlow.lower(widget, colors, sx, sy, kinds)
+    local count = #kinds
+    if count == 0 then return end
+    local column, top = 752 * sx / count, math.min(390 * sy, SURFACE_HEIGHT - 56)
+    local valueY, barY = top + math.max(19 * sy, 16), top + math.max(50 * sy, 34)
+    local footerY = top + math.max(64 * sy, 42)
+    local retro = widget.bottomDisplay == 2
+    for index, kind in ipairs(kinds) do
+        local reading, label, unit, low, high, decimals, peak = metricValues(widget, kind)
+        local x, width = 24 * sx + (index - 1) * column, column - 16 * sx
+        local tone = voltageMetricColor(widget, kind, colors.foreground)
+        local headerPeak = retro and count == 1 and peak ~= nil
+        if index > 1 then rect(x - 9 * sx, top, math.max(1, sx), 80 * sy, colors.track) end
+        text(x, top, string.upper(label or "TELEMETRY"),
+            headerPeak and width - 160 * sx or width, 16 * sy, colors.secondary, LEFT, nil, true)
+        if headerPeak then text(x + width, top, "MAX " .. valueText(peak, 0),
+            150 * sx, 16 * sy, colors.accent, RIGHT, nil, true) end
+        local valueHeight = (retro and barY or footerY) - valueY - math.max(3 * sy, 3)
+        text(x, valueY, valueText(reading, decimals) .. (unit ~= "" and " " .. unit or ""),
+            width, valueHeight, tone, LEFT, widget.valueFont)
+        if retro then
+            local segments, gap = count == 1 and 28 or 24, 2 * sx
+            local segmentWidth = (width - (segments - 1) * gap) / segments
+            local ratio = reading and clamp((reading - low) / math.max(0.01, high - low), 0, 1) or 0
+            local active, batch = reading ~= nil and math.ceil(ratio * segments) or 0, {}
+            local y, w, h = round(barY), round(segmentWidth), round(math.max(5 * sy, 3))
+            for segment = 1, segments do
+                local color = colors.track
+                if segment <= active then
+                    local zone = segment / segments * 100
+                    if kind == 4 or kind == 5 then color = tone
+                    elseif zone >= widget.redZone then color = COLORS.red
+                    elseif count == 1 and zone >= widget.redZone - 10 then color = COLORS.orange
+                    elseif count == 1 and zone >= widget.redZone - 20 then color = COLORS.yellow
+                    else color = colors.accent end
+                end
+                if segmentWidth > 0 then
+                    local offset = #batch
+                    batch[offset + 1], batch[offset + 2] = round(x + (segment - 1) * (segmentWidth + gap)), y
+                    batch[offset + 3], batch[offset + 4], batch[offset + 5] = w, h, color
+                end
+            end
+            if #batch > 0 then
+                local frame = DisplayFrame.active
+                if frame then
+                    local commands, index = frame.commands, #frame.commands + 1
+                    if index <= 1536 then
+                        commands[index] = {"flowSegments", batch, n = 1, color = batch[#batch]}
+                    else frame.overflow = true end
+                    frame.color = batch[#batch]
+                end
+                DeckFlow.segments(batch)
+            end
+            if peak and count > 1 then
+                local marker = clamp((peak - low) / math.max(0.01, high - low), 0, 1)
+                rect(x + marker * (width - 2 * sx), barY - sy, 2 * sx,
+                    math.max(5 * sy, 3) + 2 * sy, colors.foreground)
+            end
+            if count == 1 then
+                for tick = 0, 4 do
+                    local amount = low + (high - low) * tick / 4
+                    local shown = math.abs(amount) >= 1000 and string.format("%.1fk", amount / 1000)
+                        or string.format(kind == 4 and "%.2f" or (high - low < 10 and "%.1f" or "%.0f"), amount)
+                    text(x + width * tick / 4, footerY, shown, 90 * sx, 14 * sy,
+                        colors.secondary, tick == 0 and LEFT or tick == 4 and RIGHT or CENTERED, nil, true)
+                end
+            end
+        end
+        if peak ~= nil and not headerPeak then
+            text(x + width, footerY, "MAX " .. valueText(peak, 0), width, 14 * sy,
+                colors.accent, RIGHT, nil, true)
+        end
+    end
+end
+
+function DeckFlow.draw(widget, colors, sx, sy)
+    -- Hidden has room for all three preset metrics plus Custom. Only this path
+    -- preserves the fourth metric; source order and Custom positions stay intact.
+    local kinds = resolvedDeckKinds(widget, true)
+    if not validWidget(widget) then return end
+    local data, hasLower = widget.data, #kinds > 0
+    local compact = hasLower and SURFACE_HEIGHT < 300
+    DeckFlow.reading(widget, colors, sx, sy, 24, compact and 119 or hasLower and 124 or 132, 576,
+        compact and 56 or hasLower and 70 or 110, "PACK VOLTAGE", data.voltage, 1, "V")
+    rect(24 * sx, (compact and 209 or hasLower and 232 or 278) * sy, 576 * sx, math.max(1, sy), colors.track)
+    DeckFlow.reading(widget, colors, sx, sy, 24, compact and 215 or hasLower and 249 or 300, 278,
+        compact and 36 or hasLower and 44 or 76, "CURRENT", data.current, 1, "A")
+    local mah = data.used
+    if widget.mahDisplay == 2 then mah = data.remaining end
+    DeckFlow.reading(widget, colors, sx, sy, 322, compact and 215 or hasLower and 249 or 300, 278,
+        compact and 36 or hasLower and 44 or 76, widget.mahDisplay == 2 and "REMAINING CAPACITY" or "CONSUMED",
+        mah, 0, "mAh")
+    drawBattery(widget, colors, sx, sy, compact and DeckFlow.compactReserve or hasLower and DeckFlow.reserve or nil)
+
+    local status, tone = nil, colors.secondary
+    if widget.preview then status, tone = "PREVIEW", colors.accent
+    elseif data.counterReset and widget.batteryMethod == 1 then status, tone = "COUNTER RESET: CHECK PACK", COLORS.red
+    elseif data.packCheck then
+        status, tone = data.packCheck == "cells" and "CHECK CELLS/TYPE" or "CHECK PACK/COUNTER", COLORS.red
+    elseif data.packCheckPending then status = "CHECKING PACK"
+    elseif data.low then status, tone = "LOW BATTERY", COLORS.orange
+    elseif widget.rx2Source then status = "RX2  " .. valueText(data.rx2, 1) .. " V"
+    elseif data.voltage == nil and data.used == nil then status = "Select telemetry sensors" end
+    if status then text(24 * sx, compact and SURFACE_HEIGHT - 96 or hasLower and 340 * sy
+        or math.min(440 * sy, SURFACE_HEIGHT - 38), status,
+        576 * sx, 18 * sy, tone, LEFT, nil, true) end
+    if widget.logEnabled then
+        text(24 * sx, compact and SURFACE_HEIGHT - 80 or hasLower and 363 * sy
+            or math.min(464 * sy, SURFACE_HEIGHT - 16),
+            "FLIGHTS " .. tostring(data.logCount or 0) .. " | " .. (data.logState or "Ready"),
+            576 * sx, 14 * sy, colors.accent, LEFT, nil, true)
+    end
+    if hasLower then
+        rect(24 * sx, (compact and SURFACE_HEIGHT - 62 or 386 * sy),
+            752 * sx, math.max(1, sy), colors.track)
+        DeckFlow.lower(widget, colors, sx, sy, kinds)
+    end
+end
+
 local function render(widget, w, h)
     SURFACE_HEIGHT = h
     widget.graphWidth, widget.graphHeight = w, h
@@ -2498,6 +2796,9 @@ local function render(widget, w, h)
         colors.foreground, RIGHT, widget.valueFont)
     text(776 * sx, 78 * sy, "FLIGHT TIME", 151 * sx, 16 * sy, colors.secondary, RIGHT, nil, true)
     rect(24 * sx, 108 * sy, 752 * sx, math.max(1, sy), colors.track)
+
+    if widget.displayStyle == 2 then DigitalPower.draw(widget, colors, sx, sy); return end
+    if widget.imageMode == 3 then DeckFlow.draw(widget, colors, sx, sy); return end
 
     if widget.modelImage then
         local iw, ih = widget.imageWidth or 290, widget.imageHeight or 191
@@ -2566,6 +2867,7 @@ local function paint(widget)
     if not validWidget(widget) then return end
     keepFocus(widget, width, height)
     if not validWidget(widget) then return end
+    if DisplayControl.fullScreenNotice(widget, width, height, "VoltDeck") then return end
     local state, key = widget.displayControl, DisplayFrame.key(widget, width, height)
     if state.frame and state.frame.signature ~= key then DisplayControl.clear(widget) end
     local held, epoch = state.holdUntil ~= nil, state.epoch or 0
@@ -2827,7 +3129,13 @@ local function configure(widget)
     local function refreshFields()
         for _, binding in ipairs(bindings) do
             if not currentForm() then return end
-            if type(binding.field.enable) == "function" then
+            if binding.text then
+                if binding.field and type(binding.field.value) == "function" then
+                    local value = binding.text()
+                    if not currentForm() then return end
+                    binding.field:value(value)
+                end
+            elseif type(binding.field.enable) == "function" then
                 local enabled = binding.active()
                 if not currentForm() then return end
                 binding.field:enable(enabled)
@@ -2864,7 +3172,7 @@ local function configure(widget)
     local function alerting() return widget.alarmEnabled end
     cancelAutoLog(widget)
     widget.configPanel = nil
-    form.addLine("VoltDeck " .. VERSION)
+    form.addLine("VoltDeck")
     if not currentForm() then return end
     local function group(label)
         if not currentForm() then return end
@@ -2878,8 +3186,9 @@ local function configure(widget)
         local line = form.addLine("", widget.configPanel)
         local ok, width = pcall(form.width)
         if not currentForm() then return end
-        form.addStaticText(line, {x = 10, y = 0, w = ok and width - 20 or 720, h = 30}, message)
+        return form.addStaticText(line, {x = 10, y = 0, w = ok and width - 20 or 720, h = 30}, message)
     end
+    note("Version " .. VERSION)
     local function boolean(label, key, alarmReset, active)
         if not currentForm() then return end
         local line = form.addLine(label, widget.configPanel)
@@ -2932,15 +3241,10 @@ local function configure(widget)
 
     if widget.configError then note(widget.configError) end
 
-    group("Battery")
-    choice("Remaining from", "batteryMethod",
-        {{"Consumed mAh", 1}, {"% sensor", 2}, {"Voltage estimate", 3}})
-    choice("Battery type", "chemistry", {{"Lipo", 1}, {"LiHV", 2}, {"Li-ion", 3}, {"LiFe", 4}})
-    number("Capacity", "capacityMah", 100, 100000, "mAh", 50)
-    number("Cells", "cellCount", 1, 16, nil, 1)
-    choice("mAh display", "mahDisplay", {{"Consumed", 1}, {"Remaining", 2}})
-
     group("Appearance")
+    choice("Display style", "displayStyle", {{"Deck", 1}, {"Digital", 2}})
+    bindings[#bindings + 1] = {field = note(widget.displayStyle == 2 and "Instrument focus: Power" or ""),
+        text = function() return widget.displayStyle == 2 and "Instrument focus: Power" or "" end}
     choice("Background", "backgroundMode", {{"Radio theme", 1}, {"Black", 2}, {"Custom", 3}})
     color("Background color", "backgroundColor", function() return widget.backgroundMode == 3 end)
     color("Accent color", "accentColor", function() return widget.backgroundMode ~= 1 end)
@@ -2952,7 +3256,14 @@ local function configure(widget)
         function(value) widget.imageName = value or ""; widget.imageDirty = true; changed(widget) end,
         function() return widget.imageMode == 2 end)
 
-    group("Battery alert")
+    group("Battery")
+    choice("Remaining from", "batteryMethod",
+        {{"Consumed mAh", 1}, {"% sensor", 2}, {"Voltage estimate", 3}})
+    choice("Battery type", "chemistry", {{"Lipo", 1}, {"LiHV", 2}, {"Li-ion", 3}, {"LiFe", 4}})
+    number("Capacity", "capacityMah", 100, 100000, "mAh", 50)
+    number("Cells", "cellCount", 1, 16, nil, 1)
+    choice("mAh display", "mahDisplay", {{"Consumed", 1}, {"Remaining", 2}})
+    note("Alerts")
     boolean("Battery alert", "alarmEnabled", true)
     boolean("Alert on estimate", "alarmEstimate", true, function() return alerting() and widget.batteryMethod == 3 end)
     number("Repeat", "alertInterval", 1, 600, "s", 1, alerting)
