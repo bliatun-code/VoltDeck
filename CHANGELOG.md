@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 2026.10-v10 - release, 2026-10-29
+
+- Allow at least 0.30 A during the battery check, so small packs can qualify with normal receiver and servo idle current; a 450 mAh pack now allows 0.30 A.
+- Retain capacity scaling at 0.15 C and the 1.5 A cap: 2500 mAh allows 0.375 A and 4000 mAh allows 0.60 A.
+- Keep the 10-second voltage window, counter and cell/type checks, display layouts, source selections and saved settings unchanged.
+
 ## 2026.10-v9 - release, 2026-10-24
 
 - Add optional Digital Power instruments under Appearance > Display style; Deck remains the default for existing and new models.

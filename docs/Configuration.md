@@ -7,7 +7,8 @@
 In **FrSky Suite > Lua library > Install Lua scripts**, select the release ZIP and
 click **Install scripts**. The same ZIP supports manual installation into `/scripts/VoltDeck/`.
 Follow the [installation steps](VoltDeck.md#installation), restart ETHOS and check
-the version at the top of **Configure widget**. Keep the configured widget and existing cfg/dat files when updating.
+the version at the top of **Configure widget**. Suite displays this release as **26.10.10**.
+Keep the configured widget and existing cfg/dat files when updating.
 
 **Full screen:** The widget area must fill the radio's complete LCD, including on radios with a lower resolution. A split area shows **Full screen required**; choose a full-screen area to restore the instruments. **Screen size unavailable** means the LCD dimensions could not be read; the app retries automatically. Selected sources and settings are retained.
 
@@ -29,7 +30,7 @@ The setup pictures show the simulator's menu fields. Select the sensors fitted
 to your own model; the tables explain what each source must measure.
 The dashboard and flight-log examples use illustrative readings.
 
-The widget menu and Appearance pictures below show the current stable version. Older detailed source/alert pictures remain as field references; use the tables for the current group order and select your own discovered sensors.
+The widget menu and Appearance pictures below were captured in 2026.10-v9; their fields are unchanged in 2026.10-v10. Older detailed source/alert pictures remain as field references; use the tables for the current group order and select your own discovered sensors.
 
 <table>
 <tr>
@@ -120,8 +121,10 @@ consumption level, not just when the counter is near zero.
 
 Let the pack settle. VoltDeck needs valid pack
 voltage, current and consumed mAh, followed by **10 seconds of stable low-current
-readings**. Current must be between zero and **3 × capacity / 20000 A**, capped at
-**1.5 A**: the limit is **0.375 A for 2500 mAh** or **0.60 A for 4000 mAh**.
+readings**. Current must be nonnegative and within the check limit. The limit
+scales at **0.15 C** (**3 × capacity / 20000 A**), with a **minimum limit of
+0.30 A** and a **1.5 A cap**: **450 mAh allows 0.30 A**, **2500 mAh allows
+0.375 A** and **4000 mAh allows 0.60 A**. Zero current is also valid.
 The highest and lowest voltage may differ by at most **0.20 V for the whole
 pack**, not per cell. Higher current, missing readings or a wider voltage range
 starts the window again. There is no separate waiting period. **Arm switch**

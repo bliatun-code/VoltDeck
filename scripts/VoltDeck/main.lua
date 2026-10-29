@@ -5,7 +5,7 @@
 -- Artwork is drawn natively. Model images and optional alert audio are user-selected.
 
 local RenderLCD = lcd
-local VERSION = "2026.10-v9"
+local VERSION = "2026.10-v10"
 local MAX_IMAGE_PIXELS = 160000
 local BITMAP_RESERVE = 65536
 local FLIGHT_SESSION
@@ -19,6 +19,7 @@ local VALUE_FONTS = {FONT_XXL, FONT_XL, FONT_L_BOLD, FONT_L, FONT_M_BOLD or FONT
 local SMALL_FONTS = {FONT_S, FONT_XS}
 local SURFACE_HEIGHT = 480
 local LOW_BATTERY_PERCENT = 30
+local PACK_CHECK_MIN_CURRENT = 0.3 -- Allow receiver/servo idle load on small packs.
 local PACK_CHECK_MAX_CURRENT = 1.5
 local PACK_CHECK_SECONDS = 10
 local PACK_CHECK_STABILITY_MV = 200 -- Whole-pack span, not per-cell variation.
@@ -1250,7 +1251,7 @@ local function samePackCheck(widget, state, generation)
 end
 
 local function packCheckCurrent(widget)
-    return math.min(PACK_CHECK_MAX_CURRENT, 3 * widget.capacityMah / 20000)
+    return math.min(PACK_CHECK_MAX_CURRENT, math.max(PACK_CHECK_MIN_CURRENT, 3 * widget.capacityMah / 20000))
 end
 
 local function packCheckCurrentExceeded(widget, current)

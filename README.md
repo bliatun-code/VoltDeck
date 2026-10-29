@@ -1,11 +1,13 @@
 # VoltDeck
 A full-screen battery, telemetry and power dashboard for FrSky ETHOS 1.6.6 and 26.1.2.
 
-**VoltDeck 2026.10-v9: latest release.**
+**VoltDeck 2026.10-v10: latest release.**
 
 Physical radio testing of this version passed.
 
-[Download VoltDeck-2026.10-v9.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v9/VoltDeck-2026.10-v9.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v9)
+The battery check allows at least **0.30 A** of idle current on small packs. A **450 mAh** pack can complete the check at **0.1–0.2 A**, with the existing voltage and counter checks retained.
+
+[Download VoltDeck-2026.10-v10.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v10/VoltDeck-2026.10-v10.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v10)
 
 <table>
 <tr>
@@ -18,7 +20,7 @@ Physical radio testing of this version passed.
 </tr>
 </table>
 
-Genuine X20RS / ETHOS 26.1.2 simulator captures of the current stable version, with controlled illustrative telemetry. No physical sensors were connected.
+Genuine X20RS / ETHOS 26.1.2 simulator captures from VoltDeck 2026.10-v9, with controlled illustrative telemetry. Display layouts are unchanged in 2026.10-v10. No physical sensors were connected.
 
 [Full display gallery and sensor setups](docs/Display-gallery.md) |
 [Norsk visningsgalleri](docs/Visningsgalleri-norsk.md) |
@@ -73,7 +75,7 @@ Changing style or image does not change calculation methods, telemetry sources, 
 
 ## Install VoltDeck
 
-Download [VoltDeck-2026.10-v9.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v9/VoltDeck-2026.10-v9.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
+Download [VoltDeck-2026.10-v10.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v10/VoltDeck-2026.10-v10.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
 
 - **FrSky Suite:** Connect the radio, open **Lua library**, choose **Install Lua scripts**, select the ZIP and click **Install scripts**.
 - **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all extracted files into it. The final Lua path is `/scripts/VoltDeck/main.lua`.
@@ -82,7 +84,7 @@ Restart ETHOS after installation.
 On first installation, select **VoltDeck** in a full-screen widget area and follow the
 [illustrated guide](docs/Configuration.md) for your model's sources and battery settings.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.10.9**.
+Suite displays this release as **26.10.10**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 If the widget still shows an older version after restarting, follow the
 [installation troubleshooting](docs/VoltDeck.md#installation).

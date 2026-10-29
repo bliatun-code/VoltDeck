@@ -23,8 +23,8 @@ See the [illustrated configuration guide](Configuration.md) or the
 
 ## Installation
 
-Download [VoltDeck-2026.10-v9.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v9/VoltDeck-2026.10-v9.zip) from the
-[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v9). Use the named widget package,
+Download [VoltDeck-2026.10-v10.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v10/VoltDeck-2026.10-v10.zip) from the
+[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v10). Use the named widget package,
 not the automatically generated repository source archive. The same ZIP supports
 Suite and manual installation.
 
@@ -45,7 +45,7 @@ Restart ETHOS after installation.
 On first installation, create a full-screen widget area and select **VoltDeck**. Select your model's
 telemetry sources and enter its battery capacity in the widget configuration.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.10.9**.
+Suite displays this release as **26.10.10**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 
 If the widget still shows an older version after restarting, reconnect the radio,
@@ -81,8 +81,10 @@ remaining percent = 100 * (capacity - consumed mAh) / capacity
 The displayed result is limited to 0 through 100 percent. With **Consumed mAh**,
 VoltDeck first checks the counter against a stable, low-current voltage reference.
 The check needs 10 seconds of valid readings within a 0.20 V range for the whole
-pack. Current is limited to `3 × capacity / 20000 A`, capped at 1.5 A;
-4000 mAh allows 0.60 A. ARM does not gate this check, and there is no separate
+pack. Current must be nonnegative and within the check limit. The limit scales
+at 0.15 C (`3 × capacity / 20000 A`), with a minimum limit of 0.30 A and a cap
+of 1.5 A: 450 mAh allows 0.30 A, 2500 mAh allows 0.375 A and 4000 mAh allows
+0.60 A. ARM does not gate this check, and there is no separate
 waiting period after an interrupted window.
 Until the pack is checked, remaining charge shows **--**. Differences above
 10 and no more than 20 percentage points require explicit confirmation; larger

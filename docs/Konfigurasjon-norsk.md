@@ -12,7 +12,7 @@ Samme ZIP brukes til begge installasjonsmåtene:
 
 Start ETHOS på nytt etter installasjonen. Ved første installasjon velger du
 **VoltDeck** i et fullskjerms widgetfelt. Åpne **Configure widget** fra widgetmenyen
-og kontroller versjonen øverst. Suite viser denne versjonen som **26.10.9**.
+og kontroller versjonen øverst. Suite viser denne versjonen som **26.10.10**.
 Hvis installasjonen ikke vises oppdatert i Suite, gå ut av og inn i **Lua library**.
 Viser widgeten fortsatt en eldre versjon etter omstart, koble til radioen igjen,
 fjern bare `/scripts/VoltDeck/main.luac` og start ETHOS på nytt.
@@ -37,7 +37,7 @@ Oppsettsbildene viser simulatorens menyfelt. Velg sensorene som finnes i din
 modell; tabellene forklarer hva kildene skal måle. Visningseksemplene for
 hovedskjerm og flylogg bruker illustrative verdier.
 
-Widgetmenyen og Appearance-bildene nedenfor viser gjeldende stabile versjon. Eldre detaljbilder av kilder og varsler beholdes som feltreferanser; bruk tabellene for dagens grupperekkefølge og velg egne oppdagede sensorer.
+Widgetmenyen og Appearance-bildene nedenfor er tatt i 2026.10-v9; feltene er uendret i 2026.10-v10. Eldre detaljbilder av kilder og varsler beholdes som feltreferanser; bruk tabellene for dagens grupperekkefølge og velg egne oppdagede sensorer.
 
 <table>
 <tr>
@@ -127,9 +127,11 @@ forbruksnivåer, ikke bare når telleren er nær null.
 
 La batteriet stabilisere seg. VoltDeck trenger gyldig
 pakkespenning, strøm og forbrukt mAh, fulgt av **10 sekunder med stabile
-avlesninger ved lav strøm**. Strømmen må være mellom null og **3 × kapasitet / 20000 A**,
-begrenset til **1,5 A**: grensen er **0,375 A for 2500 mAh** eller **0,60 A for
-4000 mAh**. Forskjellen mellom høyeste og laveste spenning kan være høyst
+avlesninger ved lav strøm**. Strømmen må være minst null og innenfor grensen
+for kontrollen. Grensen øker med kapasiteten ved **0,15 C** (**3 × kapasitet /
+20000 A**), med en **minstegrense på 0,30 A** og et **tak på 1,5 A**:
+**450 mAh tillater 0,30 A**, **2500 mAh tillater 0,375 A** og **4000 mAh
+tillater 0,60 A**. Null strøm er også gyldig. Forskjellen mellom høyeste og laveste spenning kan være høyst
 **0,20 V for hele pakken**, ikke per celle. Høyere strøm, manglende avlesninger
 eller større spenningsvariasjon starter målevinduet på nytt. Det er ingen egen
 ventetid. **Arm switch** sperrer ikke denne batterikontrollen; den styrer
