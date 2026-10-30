@@ -5,7 +5,7 @@
 -- Artwork is drawn natively. Model images and optional alert audio are user-selected.
 
 local RenderLCD = lcd
-local VERSION = "2026.10-v10"
+local VERSION = "2026.10-v11"
 local MAX_IMAGE_PIXELS = 160000
 local BITMAP_RESERVE = 65536
 local FLIGHT_SESSION
@@ -71,7 +71,7 @@ local SETTINGS = {
     "highThrottleSeconds", "endDelay", "throttleMinimum", "throttleMaximum",
     "rfWarnDB", "rfCriticalDB", "rfWarnPercent", "rfCriticalPercent",
     "rf1Profile", "rf2Profile", "rf2WarnDB", "rf2CriticalDB", "rf2WarnPercent", "rf2CriticalPercent",
-    "autoLogEnabled", "autoLogDelay", "customPosition", "displayStyle",
+    "autoLogEnabled", "autoLogDelay", "customPosition", "displayStyle", "idleCurrentFloorDeciA",
 }
 local SETTING_DEFS = {
     {"chemistry", 1, 1, #TYPES},
@@ -137,6 +137,10 @@ for index, definition in ipairs(SETTING_DEFS) do DECK_SETTING_DEFS[index] = defi
 -- Display choices never alter telemetry, methods or operational state. Existing
 -- VD5/VD6 records omit this field and retain the complete Deck presentation.
 SETTING_DEFS[#SETTING_DEFS + 1] = {"displayStyle", 1, 1, 2}
+-- Preserve VD7's strict 54-field layout; VD8 adds the floor in integer tenths of an ampere.
+local VD7_SETTING_DEFS = {}
+for index, definition in ipairs(SETTING_DEFS) do VD7_SETTING_DEFS[index] = definition end
+SETTING_DEFS[#SETTING_DEFS + 1] = {"idleCurrentFloorDeciA", 3, 3, 15}
 local SETTING_MAP = {}
 for _, definition in ipairs(SETTING_DEFS) do SETTING_MAP[definition[1]] = definition end
 
@@ -822,10 +826,10 @@ local CONFIG_STATE
 
 local function configRecord(key, bytes)
     local format = type(bytes) == "string" and bytes:match("^(VD%d+)|")
-    local definitions = format == "VD7" and SETTING_DEFS
+    local definitions = format == "VD8" and SETTING_DEFS or format == "VD7" and VD7_SETTING_DEFS
         or format == "VD6" and DECK_SETTING_DEFS or PREVIOUS_SETTING_DEFS
     return DeckCore.decodeSettings(key, bytes, CONFIG_LIMIT, digest, identityHex, HEX_DECODE,
-        format == "VD7" and "VD7" or format == "VD6" and "VD6" or "VD5", definitions)
+        format == "VD8" and "VD8" or format == "VD7" and "VD7" or format == "VD6" and "VD6" or "VD5", definitions)
 end
 
 local function configLoad(key)
@@ -880,7 +884,7 @@ local function configSave(widget)
     if record and record.payload ~= widget.configPayload then return false, "Settings changed in another instance; reopen" end
     local sequence = (record and record.sequence or 0) + 1
     if sequence > 1000000000 then return false, "Settings generation limit reached" end
-    local body = "VD7|" .. identityHex(key) .. "|" .. sequence .. "\n" .. payload
+    local body = "VD8|" .. identityHex(key) .. "|" .. sequence .. "\n" .. payload
     local bytes = body .. "CHECK=" .. tostring(digest(body)) .. "\n"
     if #bytes > CONFIG_LIMIT then return false, "Settings file too large" end
     local path = base .. (sequence % 2 == 1 and "a.cfg" or "b.cfg")
@@ -930,6 +934,7 @@ local function read(widget)
     widget.chemistry = numberSetting("chemistry", 1, 1, #TYPES)
     widget.cellCount = numberSetting("cellCount", 6, 1, 16)
     widget.capacityMah = numberSetting("capacityMah", 2500, 100, 100000)
+    widget.idleCurrentFloorDeciA = numberSetting("idleCurrentFloorDeciA", 3, 3, 15)
     widget.alertInterval = numberSetting("alertInterval", 10, 1, 600)
     widget.mahDisplay = numberSetting("mahDisplay", 1, 1, 2)
     widget.alarmEnabled = settingRead("alarmEnabled") ~= false
@@ -1242,6 +1247,7 @@ local function samePackSetup(widget, state, key)
         and state.armSource == widget.armSource and state.capacity == widget.capacityMah
         and state.cells == widget.cellCount and state.chemistry == widget.chemistry
         and state.method == widget.batteryMethod and state.endDelay == widget.endDelay
+        and state.idleCurrentFloorDeciA == widget.idleCurrentFloorDeciA
 end
 local function samePackCheck(widget, state, generation)
     return validPoll(widget) and widget.packCheckState == state and not widget.preview
@@ -1251,7 +1257,9 @@ local function samePackCheck(widget, state, generation)
 end
 
 local function packCheckCurrent(widget)
-    return math.min(PACK_CHECK_MAX_CURRENT, math.max(PACK_CHECK_MIN_CURRENT, 3 * widget.capacityMah / 20000))
+    local floor = finite(widget.idleCurrentFloorDeciA)
+        and round(clamp(widget.idleCurrentFloorDeciA, 3, 15)) / 10 or PACK_CHECK_MIN_CURRENT
+    return math.min(PACK_CHECK_MAX_CURRENT, math.max(floor, 3 * widget.capacityMah / 20000))
 end
 
 local function packCheckCurrentExceeded(widget, current)
@@ -1373,7 +1381,8 @@ local function checkBatteryCounter(widget, data, used, clock, key, newPack)
             voltageSource = widget.voltageSource, currentSource = widget.currentSource,
             armSource = widget.armSource, capacity = widget.capacityMah,
             cells = widget.cellCount, chemistry = widget.chemistry,
-            method = widget.batteryMethod, endDelay = widget.endDelay}
+            method = widget.batteryMethod, endDelay = widget.endDelay,
+            idleCurrentFloorDeciA = widget.idleCurrentFloorDeciA}
         widget.packCheckState = state
     end
     if state.lastClock and clock - state.lastClock > 1 then clearPackCheckWindow(state) end
@@ -2908,7 +2917,12 @@ local function numberField(widget, label, key, minimum, maximum, suffix, step, o
     local field = form.addNumberField(line, nil, minimum, maximum,
         function() return widget[key] end,
         function(value) if not validWidget(widget) or widget.configGeneration ~= generation
-                or (active and not active()) then return end; widget[key] = value
+                or (active and not active()) then return end
+            local previous = widget[key]
+            widget[key] = value
+            if key == "idleCurrentFloorDeciA" and previous ~= value then
+                widget.packCheckState, widget.pendingBatteryMessage = nil, nil
+            end
             if key == "bottomMinimum" then widget.bottomMaximum = math.max(value + 1, widget.bottomMaximum) end
             if key == "bottomMaximum" then widget.bottomMinimum = math.min(value - 1, widget.bottomMinimum) end
             if key == "signalMinimum" then widget.signalMaximum = math.max(value + 1, widget.signalMaximum) end
@@ -2933,6 +2947,7 @@ local function numberField(widget, label, key, minimum, maximum, suffix, step, o
     if not validWidget(widget) or widget.configGeneration ~= generation then return end
     if suffix then field:suffix(suffix) end
     if step then field:step(step) end
+    if key == "idleCurrentFloorDeciA" and type(field.decimals) == "function" then field:decimals(1) end
     return field
 end
 
@@ -2971,6 +2986,7 @@ local function batterySetup(widget)
         currentSource = widget.currentSource, armSource = widget.armSource,
         capacity = widget.capacityMah, cells = widget.cellCount, chemistry = widget.chemistry,
         method = widget.batteryMethod, endDelay = widget.endDelay,
+        idleCurrentFloorDeciA = widget.idleCurrentFloorDeciA,
         decision = widget.packCheckState and widget.packCheckState.sample,
         window = widget.packCheckState and widget.packCheckState.window}
 end
@@ -2983,7 +2999,7 @@ local function sameBatterySetup(widget, setup)
         and widget.currentSource == setup.currentSource and widget.armSource == setup.armSource
         and widget.capacityMah == setup.capacity and widget.cellCount == setup.cells
         and widget.chemistry == setup.chemistry and widget.batteryMethod == setup.method
-        and widget.endDelay == setup.endDelay
+        and widget.endDelay == setup.endDelay and widget.idleCurrentFloorDeciA == setup.idleCurrentFloorDeciA
 end
 local function acceptOtherCounter(widget, setup, key)
     local off = armIsOff(setup.armSource)
@@ -3260,6 +3276,7 @@ local function configure(widget)
     group("Battery")
     choice("Remaining from", "batteryMethod",
         {{"Consumed mAh", 1}, {"% sensor", 2}, {"Voltage estimate", 3}})
+    number("Idle current floor", "idleCurrentFloorDeciA", 3, 15, "A", 1, function() return widget.batteryMethod == 1 end)
     choice("Battery type", "chemistry", {{"Lipo", 1}, {"LiHV", 2}, {"Li-ion", 3}, {"LiFe", 4}})
     number("Capacity", "capacityMah", 100, 100000, "mAh", 50)
     number("Cells", "cellCount", 1, 16, nil, 1)

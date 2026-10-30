@@ -23,8 +23,8 @@ See the [illustrated configuration guide](Configuration.md) or the
 
 ## Installation
 
-Download [VoltDeck-2026.10-v10.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v10/VoltDeck-2026.10-v10.zip) from the
-[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v10). Use the named widget package,
+Download [VoltDeck-2026.10-v11.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v11/VoltDeck-2026.10-v11.zip) from the
+[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v11). Use the named widget package,
 not the automatically generated repository source archive. The same ZIP supports
 Suite and manual installation.
 
@@ -45,14 +45,13 @@ Restart ETHOS after installation.
 On first installation, create a full-screen widget area and select **VoltDeck**. Select your model's
 telemetry sources and enter its battery capacity in the widget configuration.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.10.10**.
+Suite displays this release as **26.10.11**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 
 If the widget still shows an older version after restarting, reconnect the radio,
 remove only `/scripts/VoltDeck/main.luac` and restart ETHOS again.
 
-Back up your model before updating. Keep the configured widget and existing cfg/dat files;
-saved settings, source selections and flight counts are retained.
+Before updating, back up the ETHOS model, all `/scripts/vc3*.cfg` files and a complete filename list. Keep the configured widget and `.dat` flight counters. Read [VD8 backup and rollback](Configuration.md#vd8-backup-and-rollback) before installing v11.
 
 ## Display style and model picture
 
@@ -68,7 +67,7 @@ Changing style or image does not change calculation methods, telemetry sources, 
 
 Before upgrading, make a complete backup of the SD card and ETHOS model storage, including every settings and flight-counter copy. Valid settings from versions before Digital open with **Deck** as the default. Previously saved Deck/Digital choices, source selections and counts are retained. Do not delete cfg/dat files to change display style.
 
-Saving settings in this release uses a newer format that 2026.10-v8 and earlier releases cannot read. Returning to those releases requires the coherent backup from before the upgrade, including model storage and all settings copies. Preserve the post-test state before restoring it. **Display style = Deck** only changes presentation; it does not downgrade the settings format.
+VoltDeck v11 reads VD5/VD6/VD7 settings and writes **VD8** during normal saving, even with the default floor. **v10 cannot read VD8.** Returning to v10 requires reinstalling its program and restoring the original ETHOS model and exact original 0/1/2-file cfg-pair state, including missing counterparts. Archive the current state first; remove only exact model-specific files proved absent before the upgrade. Follow [VD8 backup and rollback](Configuration.md#vd8-backup-and-rollback). **Display style = Deck** changes presentation and does not downgrade settings.
 
 ## Remaining battery
 
@@ -82,9 +81,13 @@ The displayed result is limited to 0 through 100 percent. With **Consumed mAh**,
 VoltDeck first checks the counter against a stable, low-current voltage reference.
 The check needs 10 seconds of valid readings within a 0.20 V range for the whole
 pack. Current must be nonnegative and within the check limit. The limit scales
-at 0.15 C (`3 × capacity / 20000 A`), with a minimum limit of 0.30 A and a cap
-of 1.5 A: 450 mAh allows 0.30 A, 2500 mAh allows 0.375 A and 4000 mAh allows
-0.60 A. ARM does not gate this check, and there is no separate
+at 0.15 C (`3 × capacity / 20000 A`), with **Battery → Idle current floor**
+selectable from 0.30 to 1.50 A in 0.10 A steps and an overall 1.50 A cap.
+The effective limit is `min(1.50, max(selected floor, 3 × capacity / 20000))` A.
+With the default 0.30 A floor, 450 mAh allows 0.30 A, 2500 mAh allows 0.375 A
+and 4000 mAh allows 0.60 A. The field is active only with Consumed mAh.
+A changed floor requires a fresh ten-second check while retaining consumption,
+reset protection, timers, sessions and counts. ARM does not gate this check, and there is no separate
 waiting period after an interrupted window.
 Until the pack is checked, remaining charge shows **--**. Differences above
 10 and no more than 20 percentage points require explicit confirmation; larger

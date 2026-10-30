@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.10-v11 - release, 2026-10-30
+
+- Add Battery > Idle current floor for Consumed mAh: default 0.30 A, adjustable to 1.50 A in 0.10 A steps. Higher capacity-dependent allowances remain, capped at 1.50 A.
+- Require a fresh ten-second check after a changed floor; retain consumption, counter-reset protection, timers, sessions and flight counts.
+- Read existing VD5/VD6/VD7 settings and save the new field in VD8, keeping native VD4 source order. Back up model/settings before upgrading; v10 cannot read VD8.
+- Retain existing voltage/telemetry checks, method-specific ARM policy, display layouts, alarms and logging.
+
 
 ## 2026.10-v10 - release, 2026-10-29
 

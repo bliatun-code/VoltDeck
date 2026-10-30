@@ -2,17 +2,50 @@
 
 [Display gallery: Deck and Digital with/without a picture, settings and telemetry sources](Display-gallery.md)
 
-[Home](../README.md) | [Installation](VoltDeck.md) | [Norsk](Konfigurasjon-norsk.md)
+[Home](../README.md) | [Installation](../README.md#install-voltdeck) | [Norsk](Konfigurasjon-norsk.md)
 
-In **FrSky Suite > Lua library > Install Lua scripts**, select the release ZIP and
+**Before installation:** back up the ETHOS model and `/scripts/vc3*.cfg` pairs. Read
+[VD8 backup and rollback](#vd8-backup-and-rollback); v10 cannot read settings saved as VD8.
+
+In **FrSky Suite > Lua library > Install Lua scripts**, select **VoltDeck-2026.10-v11.zip** from the [release package](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v11/VoltDeck-2026.10-v11.zip) and
 click **Install scripts**. The same ZIP supports manual installation into `/scripts/VoltDeck/`.
-Follow the [installation steps](VoltDeck.md#installation), restart ETHOS and check
-the version at the top of **Configure widget**. Suite displays this release as **26.10.10**.
+Follow the [installation steps](../README.md#install-voltdeck), restart ETHOS and check
+the version at the top of **Configure widget**. Suite displays this release as **26.10.11**.
 Keep the configured widget and existing cfg/dat files when updating.
 
 **Full screen:** The widget area must fill the radio's complete LCD, including on radios with a lower resolution. A split area shows **Full screen required**; choose a full-screen area to restore the instruments. **Screen size unavailable** means the LCD dimensions could not be read; the app retries automatically. Selected sources and settings are retained.
 
-See [upgrading and rollback](VoltDeck.md#upgrading-and-rollback) before returning to an older release.
+See [upgrading and rollback](Configuration.md#vd8-backup-and-rollback) before returning to an older release.
+
+## VD8 backup and rollback
+
+Before installing or starting v11, back up the **ETHOS model** and copy all existing
+**`/scripts/vc3*.cfg` files** to the computer. Retain a complete before-install file list as well
+as the file bytes. For each exact model-specific prefix, record whether its a/b pair originally
+has **0, 1 or 2 files**, including which counterpart is absent. An incomplete copy of the folder
+does not establish that a file was absent. Keep the configured widget and existing `.dat` flight counters.
+If the model has no identifiable prefix before the upgrade, keep the complete list. Identify
+its created/changed filenames after using only this model, then compare that prefix against the
+original complete list to establish the original 0/1/2 state before rollback.
+
+VoltDeck v11 reads old **VD5, VD6 and VD7** settings and preserves their selections.
+A normal settings save writes **VD8**, including the new floor; this also happens when the floor
+remains at its default. **Stable v10 cannot read a saved VD8 record.** Installing v10 alone does
+not restore the previous format. Before rollback, archive the current upgraded model and cfg files
+separately. Install the original v10 package and restore the original model and the **exact original
+file state** for its cfg pair before starting v10:
+
+| Original cfg files for the model | Restore this state |
+| --- | --- |
+| 2 files | Restore both original a/b files, using their exact filenames and backed-up bytes. |
+| 1 file | Restore the original file. If the missing counterpart was created by v11, archive it and remove only that exact counterpart filename. |
+| 0 files | After archiving them, remove only the exact a/b filenames created by v11 for this model and proved absent from the complete before-install list. |
+
+Use the exact model prefix; keep other models' files. Record the v11-created filenames
+before removing them. Compare the original list and bytes with the restored directory. Copying one
+old file back while a newer VD8 counterpart remains can still block v10. Deleting the newest file
+alone is not a rollback procedure. Do not rename VD8 to VD7 or edit checksums.
+Native source selections retain their existing storage format; flight-counter `.dat` files are unchanged.
 
 On first installation, select **VoltDeck** in a full-screen widget area.
 Open **Configure widget** from the widget menu and follow the groups below in their radio-menu order.
@@ -30,7 +63,7 @@ The setup pictures show the simulator's menu fields. Select the sensors fitted
 to your own model; the tables explain what each source must measure.
 The dashboard and flight-log examples use illustrative readings.
 
-The widget menu and Appearance pictures below were captured in 2026.10-v9; their fields are unchanged in 2026.10-v10. Older detailed source/alert pictures remain as field references; use the tables for the current group order and select your own discovered sensors.
+The widget menu and Appearance pictures below were captured in 2026.10-v9; their fields remain historical references. The new Battery field is listed in the current table. Older detailed source/alert pictures remain as field references; use the tables for the current group order and select your own discovered sensors.
 
 <table>
 <tr>
@@ -77,9 +110,12 @@ see [NOTICE](../NOTICE.md) for its terms.
 
 ![Battery settings](images/voltdeck-setup-battery.png)
 
+The older reference picture does not show the new **Idle current floor** field immediately after **Remaining from**. Use the current table below.
+
 | Field | What to select |
 |---|---|
 | Remaining from | **Consumed mAh** uses capacity minus consumption after the pack check below. **% sensor** uses a remaining-charge percentage. **Voltage estimate** estimates charge from pack voltage, battery type and cell count. |
+| Idle current floor | Defaults to **0.30 A**; increase to **1.50 A** in **0.10 A** steps. Active only with **Consumed mAh**. The effective limit is the larger of this setting and the capacity allowance, capped at 1.50 A. A value change starts a fresh check and keeps consumption, timers and flight counts. |
 | Battery type | Lipo, LiHV, Li-ion or LiFe, matching the pack. Used by the voltage estimate, cell-meter scale, consumption check, full-pack KV scale and battery label. |
 | Capacity | Actual pack capacity in mAh. Also used by **mAh display / Remaining**, even when the main battery percentage comes from another method. |
 | Cells | Number of series cells. Used by the battery label, average cell voltage, consumption check, voltage estimate and full-pack KV scale. |
@@ -121,10 +157,15 @@ consumption level, not just when the counter is near zero.
 
 Let the pack settle. VoltDeck needs valid pack
 voltage, current and consumed mAh, followed by **10 seconds of stable low-current
-readings**. Current must be nonnegative and within the check limit. The limit
-scales at **0.15 C** (**3 × capacity / 20000 A**), with a **minimum limit of
-0.30 A** and a **1.5 A cap**: **450 mAh allows 0.30 A**, **2500 mAh allows
-0.375 A** and **4000 mAh allows 0.60 A**. Zero current is also valid.
+readings**. Current must be nonnegative and within the check limit. The effective limit is
+`min(1.50 A, max(Idle current floor, 3 × capacity_mAh / 20000))`.
+**Idle current floor** defaults to **0.30 A** and is adjustable from **0.30 to 1.50 A**
+in **0.10 A** steps. The existing capacity allowance is **0.15 C**. At the default,
+**450 mAh allows 0.30 A**, **2500 mAh allows 0.375 A**, **3000 mAh allows 0.450 A**
+and **4000 mAh allows 0.60 A**. A larger capacity allowance still applies when it exceeds
+the selected floor. Changing the floor immediately discards the previous check window and any
+old confirmation, then requires a fresh ten-second check. Consumption, counter-reset protection,
+timers and flight counts are retained. Zero current is also valid.
 The highest and lowest voltage may differ by at most **0.20 V for the whole
 pack**, not per cell. Higher current, missing readings or a wider voltage range
 starts the window again. There is no separate waiting period. **Arm switch**

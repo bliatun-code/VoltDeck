@@ -2,9 +2,12 @@
 
 [Visningsgalleri: Deck og Digital med/uten bilde, valg og telemetrikilder](Visningsgalleri-norsk.md)
 
-[Hjem](../README.md) | [Installasjon](VoltDeck.md) | [English](Configuration.md)
+[Hjem](../README.md) | [Installasjon](../README.md#install-voltdeck) | [English](Configuration.md)
 
-Last ned den navngitte VoltDeck-ZIP-pakken fra [release-siden](https://github.com/bliatun-code/VoltDeck/releases/latest).
+**Før installasjon:** ta backup av ETHOS-modellen og `/scripts/vc3*.cfg`-parene. Les
+[VD8 backup og tilbakeføring](#vd8-backup-og-tilbakeføring); v10 kan ikke lese innstillinger lagret som VD8.
+
+Bruk [pakken VoltDeck-2026.10-v11.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v11/VoltDeck-2026.10-v11.zip).
 Samme ZIP brukes til begge installasjonsmåtene:
 
 - **FrSky Suite:** Koble til radioen, åpne **Lua library**, velg **Install Lua scripts**, velg ZIP-filen og trykk **Install scripts**.
@@ -12,7 +15,7 @@ Samme ZIP brukes til begge installasjonsmåtene:
 
 Start ETHOS på nytt etter installasjonen. Ved første installasjon velger du
 **VoltDeck** i et fullskjerms widgetfelt. Åpne **Configure widget** fra widgetmenyen
-og kontroller versjonen øverst. Suite viser denne versjonen som **26.10.10**.
+og kontroller versjonen øverst. Suite viser denne versjonen som **26.10.11**.
 Hvis installasjonen ikke vises oppdatert i Suite, gå ut av og inn i **Lua library**.
 Viser widgeten fortsatt en eldre versjon etter omstart, koble til radioen igjen,
 fjern bare `/scripts/VoltDeck/main.luac` og start ETHOS på nytt.
@@ -21,7 +24,39 @@ lagrede innstillinger, kildevalg og flytellere beholdes.
 
 **Fullskjerm:** Widgetfeltet må fylle hele LCD-flaten på radioen. Dette gjelder også radioer med lavere oppløsning. Et delt felt viser **Full screen required**; velg et fullskjermsfelt for å få instrumentene tilbake. **Screen size unavailable** betyr at skjermmål ikke kunne leses; appen prøver automatisk på nytt. Valgte kilder og innstillinger beholdes.
 
-Se [oppgradering og tilbakeføring](VoltDeck.md#upgrading-and-rollback) før du går tilbake til en eldre utgave.
+Se [oppgradering og tilbakeføring](Konfigurasjon-norsk.md#vd8-backup-og-tilbakeføring) før du går tilbake til en eldre utgave.
+
+## VD8 backup og tilbakeføring
+
+Før installasjon eller første start av v11: ta backup av **ETHOS-modellen** og kopier
+alle eksisterende **`/scripts/vc3*.cfg`-filer** til datamaskinen. Behold også en fullstendig
+filoversikt fra før installasjonen. Registrer om a/b-paret for hvert nøyaktige modellprefiks
+opprinnelig har **0, 1 eller 2 filer**, og hvilken motpart som eventuelt mangler. En ufullstendig
+kopi av mappen beviser ikke at en fil var fraværende. Behold den konfigurerte widgeten og
+eksisterende flytellere i `.dat`-filer.
+Hvis modellen ikke har et identifiserbart prefiks før oppgraderingen, behold hele før-listen.
+Finn modellens opprettede/endrede filnavn etter å ha brukt bare denne modellen, og sammenlign
+prefikset mot den fullstendige før-listen for å fastslå opprinnelig 0/1/2-tilstand før tilbakeføring.
+
+VoltDeck v11 leser gamle **VD5-, VD6- og VD7**-innstillinger og bevarer de tidligere valgene.
+Vanlig lagring skriver **VD8** med det nye feltet, også når minstegrensen står på standardverdien.
+**Stabil v10 kan ikke lese en lagret VD8-record.** Bare å installere v10 gjenoppretter ikke
+det gamle formatet. Arkiver først den oppgraderte modellen og cfg-filer separat. Installer
+den opprinnelige v10-pakken og hent tilbake den opprinnelige modellen og **nøyaktig opprinnelig
+filtilstand** for modellens cfg-par før v10 startes:
+
+| Opprinnelige cfg-filer for modellen | Tilstand som skal gjenopprettes |
+| --- | --- |
+| 2 filer | Hent tilbake begge opprinnelige a/b-filer med nøyaktig samme filnavn og byte fra backupen. |
+| 1 fil | Hent tilbake den opprinnelige filen. Hvis v11 opprettet motparten som manglet, arkiver og fjern bare denne nøyaktig navngitte motparten. |
+| 0 filer | Arkiver først filene. Fjern deretter bare de nøyaktige a/b-filnavnene v11 opprettet for denne modellen, og som er bevist fraværende i den fullstendige før-listen. |
+
+Bruk modellens nøyaktige prefiks; behold andre modellers filer. Registrer opprettede
+filnavn før de fjernes. Sammenlign før-listen og originalbytene med den gjenopprettede mappen.
+Bare å kopiere én gammel fil tilbake mens en nyere VD8-motpart ligger igjen, kan fortsatt sperre
+v10. Å slette den nyeste filen alene er ingen tilbakeføringsprosedyre. Ikke omdøp VD8 til VD7
+eller rediger checksummen.
+Native kildevalg beholder sitt eksisterende lagringsformat, og flytellernes `.dat`-filer er uendret.
 
 Følg gruppene nedenfor i samme rekkefølge som på radioen.
 Innstillinger og kildevalg tilhører den aktive modellen.
@@ -37,7 +72,7 @@ Oppsettsbildene viser simulatorens menyfelt. Velg sensorene som finnes i din
 modell; tabellene forklarer hva kildene skal måle. Visningseksemplene for
 hovedskjerm og flylogg bruker illustrative verdier.
 
-Widgetmenyen og Appearance-bildene nedenfor er tatt i 2026.10-v9; feltene er uendret i 2026.10-v10. Eldre detaljbilder av kilder og varsler beholdes som feltreferanser; bruk tabellene for dagens grupperekkefølge og velg egne oppdagede sensorer.
+Widgetmenyen og Appearance-bildene nedenfor er tatt i 2026.10-v9 og beholdes som historiske referanser. Det nye Battery-feltet står i den oppdaterte tabellen. Eldre detaljbilder av kilder og varsler beholdes som feltreferanser; bruk tabellene for dagens grupperekkefølge og velg egne oppdagede sensorer.
 
 <table>
 <tr>
@@ -84,9 +119,12 @@ se [NOTICE](../NOTICE.md) for bruksvilkår.
 
 ![Batteriinnstillinger](images/voltdeck-setup-battery.png)
 
+Det eldre referansebildet viser ikke det nye **Idle current floor**-feltet rett etter **Remaining from**. Bruk den oppdaterte tabellen nedenfor.
+
 | Felt | Hva du velger |
 |---|---|
 | Remaining from | **Consumed mAh** bruker kapasitet minus forbruk etter batterikontrollen nedenfor. **% sensor** bruker en kilde med gjenværende prosent. **Voltage estimate** anslår lading fra pakkespenning, batteritype og celletall. |
+| Idle current floor | Standard **0,30 A**, justerbar til **1,50 A** i trinn på **0,10 A**. Aktiv bare med **Consumed mAh**. Effektiv grense er den høyeste av dette valget og kapasitetsgrensen, begrenset til 1,50 A. En verdiendring krever ny kontroll og beholder forbruk, tidtakere og flyteller. |
 | Battery type | Lipo, LiHV, Li-ion eller LiFe, tilsvarende batteriet. Brukes av spenningsestimat, cellemålerens skala, forbrukskontroll, full-pack KV-skala og batterietikett. |
 | Capacity | Batteriets kapasitet i mAh. Brukes også av **mAh display / Remaining** når batteriprosenten kommer fra en annen metode. |
 | Cells | Antall celler i serie. Brukes av batterietikett, gjennomsnittlig cellevolt, forbrukskontroll, spenningsestimat og full-pack KV-skala. |
@@ -128,10 +166,15 @@ forbruksnivåer, ikke bare når telleren er nær null.
 La batteriet stabilisere seg. VoltDeck trenger gyldig
 pakkespenning, strøm og forbrukt mAh, fulgt av **10 sekunder med stabile
 avlesninger ved lav strøm**. Strømmen må være minst null og innenfor grensen
-for kontrollen. Grensen øker med kapasiteten ved **0,15 C** (**3 × kapasitet /
-20000 A**), med en **minstegrense på 0,30 A** og et **tak på 1,5 A**:
-**450 mAh tillater 0,30 A**, **2500 mAh tillater 0,375 A** og **4000 mAh
-tillater 0,60 A**. Null strøm er også gyldig. Forskjellen mellom høyeste og laveste spenning kan være høyst
+for kontrollen. Effektiv grense er
+`min(1,50 A; max(Idle current floor; 3 × kapasitet_mAh / 20000))`.
+**Idle current floor** er normalt **0,30 A** og kan økes fra **0,30 til 1,50 A**
+i trinn på **0,10 A**. Den eksisterende kapasitetsgrensen er **0,15 C**. Med standardverdien
+tillater **450 mAh 0,30 A**, **2500 mAh 0,375 A**, **3000 mAh 0,450 A** og **4000 mAh 0,60 A**.
+En høyere kapasitetsgrense gjelder fortsatt når den overstiger valgt minstegrense.
+En verdiendring forkaster det gamle kontrollvinduet og en gammel bekreftelse straks, og krever
+en ny ti-sekunderskontroll. Forbruk, tellerreset-vern, tidtakere og flyteller beholdes.
+Null strøm er også gyldig. Forskjellen mellom høyeste og laveste spenning kan være høyst
 **0,20 V for hele pakken**, ikke per celle. Høyere strøm, manglende avlesninger
 eller større spenningsvariasjon starter målevinduet på nytt. Det er ingen egen
 ventetid. **Arm switch** sperrer ikke denne batterikontrollen; den styrer
