@@ -4,8 +4,452 @@
 -- Configure one full-screen zone in Ethos. Scalar settings are saved per model.
 -- Artwork is drawn natively. Model images and optional alert audio are user-selected.
 
+-- SPDX-License-Identifier: MIT
+-- Release form-owned upvalues without retargeting retained native setters.
+local FormLifecycle = {}
+function FormLifecycle.release(owner)
+    if type(owner) ~= "table" then return end
+    local releases = owner._deckFormReleases
+    owner._deckFormReleases, owner._deckFormModel = nil, nil
+    if releases then
+        for index = 1, #releases do releases[index](); releases[index] = nil end
+    end
+end
+function FormLifecycle.begin(owner, model, release)
+    owner._deckFormModel, owner._deckFormReleases = model, {release}
+end
+function FormLifecycle.attach(owner, release)
+    local releases = owner._deckFormReleases
+    if releases then releases[#releases + 1] = release end
+end
+function FormLifecycle.modelChanged(owner, model)
+    if owner._deckFormReleases and owner._deckFormModel ~= model then FormLifecycle.release(owner) end
+end
+function FormLifecycle.current(owner, generation, model, identity, valid)
+    if not valid(owner) or not owner._deckFormReleases or owner.configGeneration ~= generation then return false end
+    local actual = identity()
+    return valid(owner) and owner._deckFormReleases ~= nil and owner.configGeneration == generation
+        and owner._deckFormModel == model and actual == model
+end
+function FormLifecycle.configure(owner, build, valid)
+    if not valid(owner) then return end
+    FormLifecycle.release(owner)
+    local ok, problem = pcall(build, owner)
+    if not ok then FormLifecycle.release(owner); error(problem, 0) end
+end
+-- SPDX-License-Identifier: MIT
+-- Keep unresolved stored references distinct from an explicit user selection of None.
+-- No lookup by a display label and no shared routing between widget instances.
+local SourcePersistence = {}
+function SourcePersistence.decode(raw, restore)
+    local values, retained = {}, {}
+    for key, value in pairs(raw) do
+        local source = restore(value)
+        values[key] = source
+        if source == nil and value ~= nil and value ~= false and value ~= "" then
+            retained[key] = value
+        end
+    end
+    return values, retained
+end
+function SourcePersistence.value(owner, key, source, model)
+    if source ~= nil and source ~= false then return source end
+    if owner.sourceReadModel == model and owner.sourceFallback then
+        local retained = owner.sourceFallback[key]
+        if retained ~= nil then return retained end
+    end
+    return nil
+end
+function SourcePersistence.selected(owner, key)
+    if owner.sourceFallback then owner.sourceFallback[key] = nil end
+end
+function SourcePersistence.notice(owner)
+    return owner.sourceFallback and next(owner.sourceFallback) ~= nil
+        and "Unavailable source selections retained. Reselect to change." or nil
+end
+-- SPDX-License-Identifier: MIT
+local SensorSetup = {}
+
+local function readInfo(source)
+    return source:name(), source:unit(), source:member(), source:options(), source:category()
+end
+
+local function sensorInfo(source)
+    if type(source)~="userdata" and type(source)~="table" then return end
+    local ok,name,unit,member,options,category=pcall(readInfo,source)
+    if not ok or type(name)~="string" or name=="" or name=="---" or type(member)~="number"
+        or category==nil or category==CATEGORY_NONE then return end
+    return {source=source,name=name,unit=unit,member=member,options=options,category=category}
+end
+
+local function same(a,b)
+    return a and b and a.member==b.member and a.options==b.options and a.name==b.name and a.unit==b.unit
+end
+
+local function catalog()
+    local ok, sources = pcall(system.getSources, CATEGORY_TELEMETRY_SENSOR)
+    if not ok or type(sources)~="table" or #sources>128 then return end
+    local sensors,byMember,byUnit={},{},{}
+    for _,source in ipairs(sources) do
+        local info=sensorInfo(source)
+        if info and info.category==CATEGORY_TELEMETRY_SENSOR then
+            info.tag=info.name:lower():gsub("[^%w]","")
+            sensors[#sensors+1]=info
+            byMember[info.member]=info
+            local unit=info.unit
+            if unit~=nil then
+                local bucket=byUnit[unit]
+                if not bucket then bucket={};byUnit[unit]=bucket end
+                bucket[#bucket+1]=info
+            end
+        end
+    end
+    return sensors,byMember,byUnit
+end
+
+local function oneOf(unit,a,b,c,d)
+    return unit~=nil and (unit==a or unit==b or unit==c or unit==d)
+end
+
+local roleUnits={}
+local function units(roles,...)
+    local set={}
+    for index=1,select("#",...) do
+        local unit=select(index,...)
+        if unit~=nil then set[#set+1]=unit end
+    end
+    for _,role in ipairs(roles) do roleUnits[role]=set end
+end
+units({"pack","rx1","rx2"},UNIT_VOLT,UNIT_MILLIVOLT)
+units({"current","rxcurrent"},UNIT_AMPERE,UNIT_MILLIAMPERE)
+units({"used","rxused"},UNIT_MILLIAMPERE_HOUR,UNIT_AMPERE_HOUR)
+units({"rpm"},UNIT_RPM)
+units({"rf"},UNIT_DB,UNIT_PERCENT)
+units({"flow"},UNIT_MILLILITER_PER_MINUTE)
+units({"temperature","escTemperature"},UNIT_CELSIUS,UNIT_FAHRENHEIT,UNIT_DEGREE_CELSIUS,UNIT_DEGREE_FAHRENHEIT)
+units({"altitude"},UNIT_METER,UNIT_FOOT,UNIT_KILOMETER)
+units({"vario"},UNIT_METER_PER_SECOND,UNIT_FOOT_PER_SECOND,UNIT_METER_PER_MINUTE,UNIT_FOOT_PER_MINUTE)
+units({"airspeed","groundspeed"},UNIT_KILOMETER_PER_HOUR,UNIT_METER_PER_SECOND,UNIT_MILE_PER_HOUR,UNIT_KNOT)
+
+local aliases={}
+local function names(role, words)
+    local set={}
+    for name in words:gmatch("%S+") do set[name]=true end
+    aliases[role]=set
+end
+names("pack","escvoltage escvolt escv packvoltage packvolt flightbatteryvoltage vfas")
+names("current","esccurrent esca packcurrent flightbatterycurrent curr current")
+names("used","escconsumption escconsumed escmah packconsumption consumedmah consumption capa")
+names("rxcurrent","rxcurrent rxtotalcurrent")
+names("rxused","rxconsumption rxconsuption rxconsumed rxtotalconsumed rxmah consumption consumedmah")
+names("rx1","rxbatt rxbt rxvoltage rxbattery")
+names("escTemperature","esctemp esctemperature")
+names("altitude","alt altitude baroalt baroaltitude gpsalt gpsaltitude galt")
+names("vario","vario vspeed verticalspeed vspd climbrate")
+names("airspeed","airspeed pitot pitotairspeed aspd")
+names("groundspeed","gpsspeed groundspeed gpsgroundspeed gspd")
+names("genericCurrent","current curr")
+names("genericUsed","consumedmah consumption capa")
+names("genericRxUsed","consumedmah consumption")
+names("engineTemp","enginetemperature enginetemp aestemp cht")
+names("flow","aesflow fuelflow flow")
+
+local function match(sensor, role)
+    local u,n=sensor.unit,sensor.tag
+    if role=="rf" then
+        return (u==UNIT_DB and n:match("^rssi[%dgmhz]*$"))
+            or (u==UNIT_PERCENT and n:match("^vfr[%dgmhz]*$"))
+    elseif role=="rx1" or role=="rx2" then
+        if n:sub(1,2)~="rx" then return false end
+        local number=n:match("^rxbatt(%d)$") or n:match("^rx(%d)voltage$") or n:match("^rxvoltage(%d)$")
+        return number==role:sub(-1) or (role=="rx1" and aliases.rx1[n])
+    elseif role=="rpm" or role=="temperature" then
+        return true
+    end
+    return aliases[role][n]
+end
+
+-- The unit gives the measurement type, but several roles share the same
+-- unit. Offer unit-only matches as manual choices when no role name matches.
+local function sameMeasurement(sensor,role)
+    local u,n=sensor.unit,sensor.tag
+    if role=="flow" then
+        return u==UNIT_MILLILITER_PER_MINUTE and not n:find("max",1,true)
+            and not n:find("avg",1,true) and not n:find("average",1,true) and not n:find("minflow",1,true)
+    elseif role=="pack" or role=="rx1" or role=="rx2" then
+        if not oneOf(u,UNIT_VOLT,UNIT_MILLIVOLT) then return false end
+        if n:match("cell%d*$") or n:match("^cell%d*voltage$") or n:match("^tx") then return false end
+        if role=="pack" then return not n:match("^rx") end
+        return not match(sensor,"pack") and not match(sensor,role=="rx1" and "rx2" or "rx1")
+    elseif role=="current" or role=="rxcurrent" then
+        if not oneOf(u,UNIT_AMPERE,UNIT_MILLIAMPERE) then return false end
+        if role=="current" then return not n:match("^rx") end
+        return not n:match("^esc") and not n:match("^pack")
+    elseif role=="used" or role=="rxused" then
+        if not oneOf(u,UNIT_MILLIAMPERE_HOUR,UNIT_AMPERE_HOUR) then return false end
+        if role=="used" then return not n:match("^rx") end
+        return not n:match("^esc") and not n:match("^pack")
+    elseif role=="altitude" then
+        return oneOf(u,UNIT_METER,UNIT_FOOT,UNIT_KILOMETER) and not n:find("dist",1,true)
+    elseif role=="vario" then
+        return oneOf(u,UNIT_METER_PER_SECOND,UNIT_FOOT_PER_SECOND,UNIT_METER_PER_MINUTE,UNIT_FOOT_PER_MINUTE)
+            and not match(sensor,"airspeed") and not match(sensor,"groundspeed")
+    elseif role=="airspeed" or role=="groundspeed" then
+        return oneOf(u,UNIT_KILOMETER_PER_HOUR,UNIT_METER_PER_SECOND,UNIT_MILE_PER_HOUR,UNIT_KNOT)
+            and not match(sensor,"vario") and not match(sensor,role=="airspeed" and "groundspeed" or "airspeed")
+    end
+    return false
+end
+
+local function manualOnly(row, sensor)
+    if row.manual then return true end
+    local n=sensor.tag
+    return (row.role=="current" and aliases.genericCurrent[n])
+        or (row.role=="used" and aliases.genericUsed[n])
+        or (row.role=="rxused" and aliases.genericRxUsed[n])
+        or (row.role=="temperature" and not aliases.engineTemp[n])
+end
+
+-- All controls are native widget form controls. The draft lives only as long
+-- as this form generation, and no field is written until the dialog confirms.
+function SensorSetup.add(owner, panel, rows, current, sourceFor, apply, consumptionHint, reviewHint, methods)
+    if type(system.getSources)~="function" or CATEGORY_TELEMETRY_SENSOR==nil then return end
+    local draft,picks,fields,status,hint,pending,states
+    local function sourceState(source,byMember)
+        if not source then return end
+        local info=sensorInfo(source)
+        if not info then return "Unavailable",nil end
+        if info.category~=CATEGORY_TELEMETRY_SENSOR then return info.name,info end
+        local known=byMember and byMember[info.member]
+        -- Existing derived telemetry options are valid even when the catalog
+        -- only lists their base sensor. Never use telemetry freshness here.
+        if not byMember or (known and known.name==info.name) then return info.name,info end
+        return "Unavailable",nil
+    end
+    local function stateFor(byMember)
+        local snapshot,used={},{}
+        for i,row in ipairs(rows) do
+            local source=sourceFor(row.key)
+            local label,info=sourceState(source,byMember)
+            snapshot[i]={source=source,label=label,replaceable=source~=nil and info==nil}
+            if info and info.category==CATEGORY_TELEMETRY_SENSOR then
+                used[info.member]=true
+            end
+        end
+        return snapshot,used
+    end
+    local function setStatus(message)
+        if current() and status and type(status.value)=="function" then status:value(message) end
+    end
+    local function refresh()
+        if not current() then return end
+        for i,row in ipairs(rows) do
+            local candidates=draft and draft[i]
+            local enabled=candidates~=nil
+            local label=states[i].label
+            if enabled then label=label and "Keep unavailable" or "Choose / leave empty" end
+            local choices={{label or "---",0}}
+            if enabled then
+                for index,candidate in ipairs(candidates) do
+                    choices[#choices+1]={candidate.label or candidate.name,index}
+                end
+            end
+            local field=fields[i]
+            if field then
+                field:values(choices)
+                field:enable(enabled)
+            end
+        end
+    end
+    local function clear(message)
+        draft,picks,pending=nil,nil,nil
+        refresh()
+        setStatus(message)
+    end
+    local function scan()
+        if not current() then return end
+        local sensors,byMember,byUnit=catalog()
+        if not current() then return end
+        if not sensors then clear("Sensor list unavailable. Use the source fields.");return end
+        local used
+        states,used=stateFor(byMember)
+        draft,picks={},{}
+        local ready,manual=0,0
+        local found,missingConsumption,tooMany={},false,false
+        local matches={}
+        for i,row in ipairs(rows) do
+            local state,role=states[i],row.role
+            if state.source and not state.replaceable then found[role]=true end
+            if (not state.source or state.replaceable) and (not row.enabled or row.enabled()) then
+                local result=matches[role]
+                if not result then
+                    local candidates={}
+                    for _,unit in ipairs(roleUnits[role]) do
+                        local bucket=byUnit[unit]
+                        if bucket then
+                            for _,sensor in ipairs(bucket) do
+                                if not used[sensor.member] and match(sensor,role) then candidates[#candidates+1]=sensor end
+                            end
+                        end
+                    end
+                    local unitOnly=#candidates==0
+                    if unitOnly then
+                        for _,unit in ipairs(roleUnits[role]) do
+                            local bucket=byUnit[unit]
+                            if bucket then
+                                for _,sensor in ipairs(bucket) do
+                                    if not used[sensor.member] and sameMeasurement(sensor,role) then candidates[#candidates+1]=sensor end
+                                end
+                            end
+                        end
+                    end
+                    local names={}
+                    for _,sensor in ipairs(candidates) do names[sensor.name]=(names[sensor.name] or 0)+1 end
+                    for _,sensor in ipairs(candidates) do
+                        if names[sensor.name]>1 then sensor.label=string.format("%s (#%d)",sensor.name,sensor.member+1) end
+                    end
+                    result={candidates=candidates,unitOnly=unitOnly}
+                    matches[role]=result
+                end
+                local candidates=result.candidates
+                if #candidates>16 then
+                    state.label="Use source field"
+                    tooMany=true
+                elseif #candidates>0 then
+                    found[role]=true
+                    draft[i]=candidates
+                    if #candidates==1 and not state.replaceable and not result.unitOnly
+                        and not manualOnly(row,candidates[1]) and not (row.choose and row.choose()) then
+                        picks[i]=1
+                        ready=ready+1
+                    else manual=manual+1 end
+                elseif role=="used" or role=="rxused" then missingConsumption=true end
+            end
+        end
+        refresh()
+        setStatus(tooMany and "Large list: use the regular fields where indicated."
+            or ready+manual==0 and "No new sensor suggestions."
+            or string.format("%d suggested, %d need a choice.",ready,manual))
+        if current() and hint and type(hint.value)=="function" then
+            hint:value(missingConsumption and (found.pack or found.rx1 or found.rx2)
+                and (found.current or found.rxcurrent) and consumptionHint
+                or (reviewHint and reviewHint(found)) or "Review choices before applying.")
+        end
+    end
+    local function selected()
+        local selections={}
+        if draft then
+            for i,row in ipairs(rows) do
+                local candidate=draft[i] and draft[i][picks[i] or 0]
+                if candidate then
+                    selections[#selections+1]={row=row,index=i,sensor=candidate,previous=states[i].source}
+                end
+            end
+        end
+        return selections
+    end
+    local function methodPlan(changes,snapshot)
+        if not methods then return {},nil end
+        local sources={}
+        for i,row in ipairs(rows) do
+            if not snapshot[i].replaceable then sources[row.key]=snapshot[i].source end
+        end
+        for key,source in pairs(changes) do sources[key]=source end
+        return methods(sources,changes)
+    end
+    local function confirm()
+        if not current() then return end
+        local selections=selected()
+        if not draft then setStatus("Find or choose sensors first.");return end
+        local proposed={}
+        for _,selection in ipairs(selections) do proposed[selection.row.key]=selection.sensor.source end
+        local updates,methodMessage=methodPlan(proposed,states)
+        local originals,methodCount={},0
+        for key in pairs(updates) do originals[key]=owner[key];methodCount=methodCount+1 end
+        if #selections==0 and methodCount==0 then setStatus("Find or choose sensors first.");return end
+        local seen={}
+        for _,selection in ipairs(selections) do
+            local member=selection.sensor.member
+            if seen[member] then setStatus("Choose different sources for each field.");return end
+            seen[member]=true
+        end
+        pending=selections
+        form.openDialog({title="Use sensor suggestions?",message=string.format(
+            "Save %d selected sources. %s",#selections,methodMessage
+                or "Unavailable sources are replaced only if you chose a replacement."),
+            buttons={{label="Cancel",action=function() pending=nil;return true end},
+                {label="Use suggestions",action=function()
+                    if not current() or not pending then return true end
+                    local selections=pending
+                    pending=nil
+                    local sensors,byMember=catalog()
+                    if not sensors or not current() then return true end
+                    local latest,used=stateFor(byMember)
+                    local changes={}
+                    for _,selection in ipairs(selections) do
+                        local state,row=latest[selection.index],selection.row
+                        local sensor=byMember[selection.sensor.member]
+                        if state.source==selection.previous and (not state.source or state.replaceable)
+                            and (not row.enabled or row.enabled()) and not used[selection.sensor.member]
+                            and same(sensor,selection.sensor) then
+                            changes[row.key]=sensor.source
+                        end
+                    end
+                    if current() then
+                        local count=0
+                        for _ in pairs(changes) do count=count+1 end
+                        local nextUpdates,nextMessage=methodPlan(changes,latest)
+                        local validMethods=nextMessage==methodMessage
+                        for key,value in pairs(updates) do
+                            if owner[key]~=originals[key] or nextUpdates[key]~=value then validMethods=false end
+                        end
+                        for key in pairs(nextUpdates) do if updates[key]==nil then validMethods=false end end
+                        -- Existing sources used by a method proposal must also stay
+                        -- identified and unchanged while the confirmation is open.
+                        if methodCount>0 then
+                            for i,state in ipairs(states) do
+                                if state.source~=latest[i].source or state.label~=latest[i].label
+                                    or state.replaceable~=latest[i].replaceable then validMethods=false end
+                            end
+                        end
+                        if count==#selections and validMethods then
+                            for key in pairs(changes) do SourcePersistence.selected(owner,key) end
+                            apply(changes,updates)
+                            if current() then states=stateFor(byMember);clear("Sensor suggestions applied.") end
+                        else clear("No changes. Find sensors again.") end
+                    end
+                    return true
+                end}}})
+    end
+    local function button(label, text, action)
+        form.addButton(form.addLine(label,panel),nil,{text=text,press=action})
+    end
+    button("Find matching sensors","Suggest sensors",scan)
+    local ok,width=pcall(form.width)
+    local rect={x=8,y=0,w=ok and math.max(30,width-16) or 720,h=30}
+    status=form.addStaticText(form.addLine("",panel),rect,"Find sensors for empty fields.")
+    hint=form.addStaticText(form.addLine("",panel),rect,"Review choices before applying.")
+    fields={}
+    states=stateFor()
+    for i,row in ipairs(rows) do
+        fields[i]=form.addChoiceField(form.addLine(row.label,panel),nil,
+            {{states[i].label or "---",0}},function()
+            return current() and picks and picks[i] or 0
+        end,function(value)
+            if not current() or not draft or not draft[i] or (value~=0 and not draft[i][value]) then return end
+            picks[i]=value
+            setStatus("Review the selections, then choose Apply.")
+        end)
+        if fields[i] then fields[i]:enable(false) end
+    end
+    button("Save selected sources","Apply...",confirm)
+    button("Discard suggestions","Clear",function() if current() then clear("Suggestions cleared.") end end)
+    FormLifecycle.attach(owner,function()
+        draft,picks,fields,status,hint,rows,pending,states,owner,methods=nil,nil,nil,nil,nil,nil,nil,nil,nil,nil
+    end)
+end
 local RenderLCD = lcd
-local VERSION = "2026.10-v11"
+local VERSION = "2026.11-v1"
 local MAX_IMAGE_PIXELS = 160000
 local BITMAP_RESERVE = 65536
 local FLIGHT_SESSION
@@ -400,7 +844,6 @@ local selectedSource, getSource, restoreSource = DeckCore.selectedSource, DeckCo
 local validWidget, sample = DeckCore.validWidget, DeckCore.sample
 local sourceDetails, rfDetails = DeckCore.sourceDetails, DeckCore.rfDetails
 
-
 -- Drawing stays complete when ETHOS repaints behind a Home popup.
 -- Only the first held paint records resolved native commands, never live telemetry.
 local DisplayFrame = {active = nil}
@@ -728,14 +1171,14 @@ local function validPoll(widget)
     return validWidget(widget) and widget.nextPoll ~= 0
 end
 
-local function changed(widget, resetAlarm)
+local function changed(widget, resetAlarm, markDirty)
     if not validWidget(widget) then return end
     DisplayControl.clear(widget)
     widget.refresh = true
     widget.nextPoll = 0
     widget.metadata = nil
     if resetAlarm then widget.checkedSound = nil end
-    pcall(model.dirty)
+    if markDirty ~= false then pcall(model.dirty) end
 end
 
 local function themeColor(index, fallback)
@@ -769,11 +1212,13 @@ local function palette(widget)
     return colors
 end
 
+local initializeConfig
 local function create()
     local widget = {imageDirty = true, fontDirty = true, data = {}, scratch = {}, nextPoll = 0, refresh = true}
     for _, definition in ipairs(SETTING_DEFS) do widget[definition[1]] = definition[2] end
     widget.timerSource = getSource({category = CATEGORY_TIMER, member = 0})
     widget.builtinTx = getSource({category = CATEGORY_SYSTEM, member = SYSTEM_MAIN_VOLTAGE or MAIN_VOLTAGE})
+    initializeConfig(widget)
     return widget
 end
 
@@ -857,6 +1302,25 @@ local function configLoad(key)
     return latest, base
 end
 
+-- New native widget instances may be edited/written without a read callback.
+initializeConfig=function(widget)
+    widget.configKey=modelKey()
+    local record,base,problem=configLoad(widget.configKey)
+    widget.configError,widget.configPath=problem,base
+    widget.configPayload=record and record.payload or nil
+    if record then
+        for _,definition in ipairs(SETTING_DEFS) do
+            local key,default=definition[1],definition[2]
+            local value=record.values[key]
+            if type(value)==type(default) then
+                if finite(value) then widget[key]=definition[3] and round(clamp(value,definition[3],definition[4])) or value
+                elseif type(value)=="string" then widget[key]=value:sub(1,256)
+                else widget[key]=value end
+            end
+        end
+    end
+end
+
 local function configPayload(widget)
     local lines = {}
     for _, key in ipairs(SETTINGS) do
@@ -930,6 +1394,7 @@ local function read(widget)
     elseif first ~= nil then
         widget.configError = "Unsupported source storage; reselect sources"
     end
+    local restored, retained = SourcePersistence.decode(native, restoreSource)
     settingValues = record and record.values or {}
     widget.chemistry = numberSetting("chemistry", 1, 1, #TYPES)
     widget.cellCount = numberSetting("cellCount", 6, 1, 16)
@@ -967,7 +1432,7 @@ local function read(widget)
     widget.batteryMethod = numberSetting("batteryMethod", 1, 1, 3)
     for _, key in ipairs(SOURCE_KEYS) do
         local value = native[key]
-        if key ~= "timerSource" or value ~= nil then widget[key] = restoreSource(value) end
+        if key ~= "timerSource" or value ~= nil then widget[key] = restored[key] end
     end
     local options = {
         {"deckMode", 6, 1, 8}, {"customPosition", 3, 1, 3},
@@ -999,8 +1464,10 @@ local function read(widget)
     widget.rf2CriticalDB = math.min(widget.rf2CriticalDB, widget.rf2WarnDB)
     widget.rf2CriticalPercent = math.min(widget.rf2CriticalPercent, widget.rf2WarnPercent)
     settingValues = nil
+    widget.sourceFallback, widget.sourceReadModel = retained, widget.configKey
     widget.imageDirty, widget.fontDirty = true, true
-    changed(widget)
+    -- Loading refreshes runtime state; it must not itself request a model save.
+    changed(widget, nil, false)
 end
 
 local function write(widget)
@@ -1009,8 +1476,9 @@ local function write(widget)
     widget.configError = not ok and problem or nil
     if not ok then print("VoltDeck settings NOT saved: " .. problem) end
     -- Header and sources must be read/written in this exact order.
+    local sourceModel = modelKey()
     storage.write("v", "VD4")
-    for index, key in ipairs(SOURCE_KEYS) do storage.write(string.char(96 + index), widget[key] or "") end
+    for index, key in ipairs(SOURCE_KEYS) do storage.write(string.char(96 + index), SourcePersistence.value(widget, key, widget[key], sourceModel) or "") end
 end
 
 
@@ -1595,6 +2063,14 @@ local function updateFlight(widget, data, clock, key)
     if not validPoll(widget) then return end
     local session = FLIGHT_SESSION
     widget.flightSession = session
+    -- Legacy ETHOS can replace a widget without calling its Lua destroy handler.
+    -- An owner that no longer polls must not hold the shared flight log forever.
+    -- A handoff pauses the old running interval; no unobserved gap is counted.
+    if session.owner and session.owner ~= widget and finite(session.lastClock)
+        and clock >= session.lastClock and clock - session.lastClock > 2 then
+        session.owner, session.lastClock = nil, nil
+        if session.current then session.current.running = false end
+    end
     if session.owner and session.owner ~= widget then
         data.logCount, data.logState, data.logRevision = session.count, "Shared log", session.revision
         return
@@ -1882,6 +2358,7 @@ local function wakeup(widget)
     local key = modelKey()
     if not validPoll(widget) then return end
     if widget.peakModelKey ~= key then
+        FormLifecycle.modelChanged(widget,key)
         DisplayControl.clear(widget)
         widget.peakModelKey, widget.peakRPM, widget.peakWatts = key, nil, nil
         widget.alertStates, widget.audioUntil, widget.metadata, widget.batteryStates = nil, nil, nil, nil
@@ -2909,14 +3386,16 @@ end
 
 local function numberField(widget, label, key, minimum, maximum, suffix, step, onChanged, active)
     local generation = widget.configGeneration
+    local formModel=modelKey()
+    FormLifecycle.attach(widget,function() widget=nil;onChanged=nil;end)
     if not validWidget(widget) then return end
     local definition = SETTING_MAP[key]
     if definition and definition[3] then minimum, maximum = definition[3], definition[4] end
     local line = form.addLine(label, widget.configPanel)
-    if not validWidget(widget) or widget.configGeneration ~= generation then return end
+    if not FormLifecycle.current(widget,generation,formModel,modelKey,validWidget) then return end
     local field = form.addNumberField(line, nil, minimum, maximum,
-        function() return widget[key] end,
-        function(value) if not validWidget(widget) or widget.configGeneration ~= generation
+        function() return widget and widget[key] or 0 end,
+        function(value) if not FormLifecycle.current(widget,generation,formModel,modelKey,validWidget)
                 or (active and not active()) then return end
             local previous = widget[key]
             widget[key] = value
@@ -2944,7 +3423,7 @@ local function numberField(widget, label, key, minimum, maximum, suffix, step, o
             changed(widget)
             if onChanged and validWidget(widget) and widget.configGeneration == generation then onChanged() end
         end)
-    if not validWidget(widget) or widget.configGeneration ~= generation then return end
+    if not FormLifecycle.current(widget,generation,formModel,modelKey,validWidget) then return end
     if suffix then field:suffix(suffix) end
     if step then field:step(step) end
     if key == "idleCurrentFloorDeciA" and type(field.decimals) == "function" then field:decimals(1) end
@@ -2953,12 +3432,14 @@ end
 
 local function choiceField(widget, label, key, choices, onChanged, active)
     local generation = widget.configGeneration
+    local formModel=modelKey()
+    FormLifecycle.attach(widget,function() widget=nil;onChanged=nil;end)
     if not validWidget(widget) then return end
     local line = form.addLine(label, widget.configPanel)
-    if not validWidget(widget) or widget.configGeneration ~= generation then return end
+    if not FormLifecycle.current(widget,generation,formModel,modelKey,validWidget) then return end
     return form.addChoiceField(line, nil, choices,
-        function() return widget[key] end,
-        function(value) if not validWidget(widget) or widget.configGeneration ~= generation
+        function() return widget and widget[key] or 1 end,
+        function(value) if not FormLifecycle.current(widget,generation,formModel,modelKey,validWidget)
                 or (active and not active()) then return end; widget[key] = value
             if key == "rpmMode" then widget.peakRPM = nil end
             changed(widget)
@@ -2968,12 +3449,14 @@ end
 
 local function colorField(widget, label, key, active)
     local generation = widget.configGeneration
+    local formModel=modelKey()
+    FormLifecycle.attach(widget,function() widget=nil;end)
     if not validWidget(widget) then return end
     local line = form.addLine(label, widget.configPanel)
-    if not validWidget(widget) or widget.configGeneration ~= generation then return end
+    if not FormLifecycle.current(widget,generation,formModel,modelKey,validWidget) then return end
     return form.addColorField(line, nil,
-        function() return widget[key] end,
-        function(value) if not validWidget(widget) or widget.configGeneration ~= generation
+        function() return widget and widget[key] or 0 end,
+        function(value) if not FormLifecycle.current(widget,generation,formModel,modelKey,validWidget)
                 or (active and not active()) then return end; widget[key] = value; changed(widget) end)
 end
 
@@ -3129,15 +3612,19 @@ end
 
 
 
-local function configure(widget)
+local function configureFields(widget)
     if not validWidget(widget) then return end
     widget.navigation = nil
     DisplayControl.clear(widget)
     widget.configGeneration = (widget.configGeneration or 0) + 1
     widget.nextPoll = 0
-    local generation, bindings = widget.configGeneration, {}
+    local generation, bindings, formModel = widget.configGeneration, {}, modelKey()
+    FormLifecycle.begin(widget,formModel,function()
+        for index=1,#bindings do bindings[index]=nil end
+        widget=nil
+    end)
     local function currentForm()
-        return validWidget(widget) and widget.configGeneration == generation
+        return FormLifecycle.current(widget,generation,formModel,modelKey,validWidget)
     end
     local function bind(field, active)
         if currentForm() and field and active then bindings[#bindings + 1] = {field = field, active = active} end
@@ -3189,7 +3676,6 @@ local function configure(widget)
     local function alerting() return widget.alarmEnabled end
     cancelAutoLog(widget)
     widget.configPanel = nil
-    form.addLine("VoltDeck")
     if not currentForm() then return end
     local function group(label)
         if not currentForm() then return end
@@ -3205,12 +3691,12 @@ local function configure(widget)
         if not currentForm() then return end
         return form.addStaticText(line, {x = 10, y = 0, w = ok and width - 20 or 720, h = 30}, message)
     end
-    note("Version " .. VERSION)
+    note("VoltDeck "..VERSION)
     local function boolean(label, key, alarmReset, active)
         if not currentForm() then return end
         local line = form.addLine(label, widget.configPanel)
         if not currentForm() then return end
-        local field = form.addBooleanField(line, nil, function() return widget[key] end,
+        local field = form.addBooleanField(line, nil, function() if currentForm() then return widget[key] end;return false end,
             function(value) if not currentForm() or (active and not active()) then return end; widget[key] = value
                 if key == "autoLogEnabled" or key == "logEnabled" or key == "preview" then cancelAutoLog(widget) end
                 changed(widget, alarmReset)
@@ -3222,11 +3708,12 @@ local function configure(widget)
         if not currentForm() then return end
         local line = form.addLine(label, widget.configPanel)
         if not currentForm() then return end
-        local field = form.addSourceField(line, nil, function() return widget[key] end,
+        local field = form.addSourceField(line, nil, function() if currentForm() then return widget[key] end;return nil end,
             function(value)
                 if not currentForm() or (active and not active()) then return end
                 local source = selectedSource(value)
                 if not currentForm() or (active and not active()) then return end
+                SourcePersistence.selected(widget, key)
                 widget[key] = source; changed(widget, alarmReset)
                 if currentForm() then refreshFields() end
             end)
@@ -3236,7 +3723,7 @@ local function configure(widget)
         if not currentForm() then return end
         local line = form.addLine(label, widget.configPanel)
         if not currentForm() then return end
-        local field = form.addTextField(line, nil, function() return widget[key] end,
+        local field = form.addTextField(line, nil, function() if currentForm() then return widget[key] end;return "" end,
             function(value)
                 if not currentForm() or (active and not active()) then return end
                 widget[key] = key == "audioFolder" and normalizeAudioFolder(value) or value or ""
@@ -3249,15 +3736,38 @@ local function configure(widget)
         if not currentForm() then return end
         local line = form.addLine(label, widget.configPanel)
         if not currentForm() then return end
-        local field = form.addFileField(line, nil, folder, filter, getter, function(value)
+        local field = form.addFileField(line, nil, folder, filter, function() if currentForm() then return getter() end;return "" end, function(value)
             if not currentForm() or (active and not active()) then return end
             setter(value)
         end)
         return bind(field, active)
     end
 
-    if widget.configError then note(widget.configError) end
+    if widget.configError and widget.configError~="Model changed; reopen widget" then note(widget.configError) end
+    local sourceNotice = SourcePersistence.notice(widget)
+    if sourceNotice then note(sourceNotice) end
 
+    if type(system.getSources)=="function" then
+        group("Sensor setup")
+        SensorSetup.add(widget, widget.configPanel, {
+            {key="voltageSource",label="Pack voltage",role="pack"},
+            {key="currentSource",label="Current",role="current"},
+            {key="consumptionSource",label="Consumed mAh",role="used"},
+            {key="rpmSource",label="RPM source",role="rpm"},
+            {key="bottomSource",label="Custom source",role="escTemperature",manual=true},
+            {key="rx1Source",label="Rx1 voltage",role="rx1"},
+            {key="rx2Source",label="Rx2 voltage",role="rx2"},
+            {key="rssi1Source",label="RF1 source",role="rf"},
+            {key="rssi2Source",label="RF2 source",role="rf",manual=true},
+        }, currentForm, function(key)
+            return SourcePersistence.value(widget,key,widget[key],formModel)
+        end, function(changes)
+            for key,source in pairs(changes) do widget[key]=source end
+            cancelAutoLog(widget)
+            changed(widget,true)
+            refreshFields()
+        end, "ETHOS Telemetry: create Consumption from pack current.")
+    end
     group("Appearance")
     choice("Display style", "displayStyle", {{"Deck", 1}, {"Digital", 2}})
     bindings[#bindings + 1] = {field = note(widget.displayStyle == 2 and "Instrument focus: Power" or ""),
@@ -3387,11 +3897,16 @@ local function configure(widget)
     if currentForm() then refreshFields(); widget.configPanel = nil end
 end
 
+local function configure(widget)
+    return FormLifecycle.configure(widget,configureFields,validWidget)
+end
 local function destroy(widget)
     if not validWidget(widget) then return end
+    FormLifecycle.release(widget)
     widget.navigation = nil
     widget.displayControl = nil
     widget.signalGeometry = nil
+    widget.sourceFallback, widget.sourceReadModel = nil, nil
     widget.destroyed = true
     widget.autoLogSession, widget.autoLogSeen, widget.autoLogDue = nil, nil, nil
     widget.modelImage, widget.valueFont, widget.flightSession = nil, nil, nil

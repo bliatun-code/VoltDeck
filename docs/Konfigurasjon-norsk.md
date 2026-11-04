@@ -7,7 +7,7 @@
 **Før installasjon:** ta backup av ETHOS-modellen og `/scripts/vc3*.cfg`-parene. Les
 [VD8 backup og tilbakeføring](#vd8-backup-og-tilbakeføring); v10 kan ikke lese innstillinger lagret som VD8.
 
-Bruk [pakken VoltDeck-2026.10-v11.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v11/VoltDeck-2026.10-v11.zip).
+Bruk [pakken VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip).
 Samme ZIP brukes til begge installasjonsmåtene:
 
 - **FrSky Suite:** Koble til radioen, åpne **Lua library**, velg **Install Lua scripts**, velg ZIP-filen og trykk **Install scripts**.
@@ -15,7 +15,7 @@ Samme ZIP brukes til begge installasjonsmåtene:
 
 Start ETHOS på nytt etter installasjonen. Ved første installasjon velger du
 **VoltDeck** i et fullskjerms widgetfelt. Åpne **Configure widget** fra widgetmenyen
-og kontroller versjonen øverst. Suite viser denne versjonen som **26.10.11**.
+og kontroller versjonen øverst. Suite viser denne versjonen som **26.11.1**.
 Hvis installasjonen ikke vises oppdatert i Suite, gå ut av og inn i **Lua library**.
 Viser widgeten fortsatt en eldre versjon etter omstart, koble til radioen igjen,
 fjern bare `/scripts/VoltDeck/main.luac` og start ETHOS på nytt.
@@ -27,6 +27,8 @@ lagrede innstillinger, kildevalg og flytellere beholdes.
 Se [oppgradering og tilbakeføring](Konfigurasjon-norsk.md#vd8-backup-og-tilbakeføring) før du går tilbake til en eldre utgave.
 
 ## VD8 backup og tilbakeføring
+
+2026.11-v1 beholder VD8-formatet fra v11. Fremgangsmåten nedenfor gjelder fortsatt ved tilbakeføring til v10.
 
 Før installasjon eller første start av v11: ta backup av **ETHOS-modellen** og kopier
 alle eksisterende **`/scripts/vc3*.cfg`-filer** til datamaskinen. Behold også en fullstendig
@@ -72,7 +74,7 @@ Oppsettsbildene viser simulatorens menyfelt. Velg sensorene som finnes i din
 modell; tabellene forklarer hva kildene skal måle. Visningseksemplene for
 hovedskjerm og flylogg bruker illustrative verdier.
 
-Widgetmenyen og Appearance-bildene nedenfor er tatt i 2026.10-v9 og beholdes som historiske referanser. Det nye Battery-feltet står i den oppdaterte tabellen. Eldre detaljbilder av kilder og varsler beholdes som feltreferanser; bruk tabellene for dagens grupperekkefølge og velg egne oppdagede sensorer.
+Eldre bilder av widgetmenyen og Appearance er fortsatt feltreferanser. De nye Sensor setup-bildene viser dagens konfigurasjonsrekkefølge.
 
 <table>
 <tr>
@@ -80,6 +82,25 @@ Widgetmenyen og Appearance-bildene nedenfor er tatt i 2026.10-v9 og beholdes som
 <td><img src="images/native-voltdeck-appearance.png" alt="VoltDeck Appearance"><br><b>Appearance</b></td>
 </tr>
 </table>
+
+## Sensor setup
+
+Oppdag modellens sensorer i **ETHOS → Telemetry** først. Åpne **Configure widget → Sensor setup**.
+
+1. Trykk **Suggest sensors**. Forslagene bruker målingstype, enhet og sensornavn.
+2. Se gjennom listen. Velg sensor der flere passer; la ubrukte felt stå tomme.
+3. Trykk **Apply...**, kontroller bekreftelsen og velg **Use suggestions**. **Cancel** lagrer ingenting.
+
+Tilgjengelige kildevalg beholdes, også når sensoren midlertidig er frakoblet. En manglende kilde erstattes bare når du selv velger en erstatning. **Clear** forkaster forslagene. De vanlige kildefeltene kan fortsatt brukes.
+
+Sensor setup oppretter ikke beregnede sensorer. Mangler consumed mAh, opprett en forbrukssensor fra strøm i ETHOS og kjør **Suggest sensors** på nytt. Kontroller batteriinnstillinger og telemetri før flyging.
+
+<table>
+<tr><td><img src="images/sensor-setup-menu.png" alt="VoltDeck konfigurasjon og versjon"><br><b>Åpne Sensor setup</b></td><td><img src="images/sensor-setup-scan.png" alt="Sensorforslag"><br><b>Finn passende sensorer</b></td></tr>
+<tr><td><img src="images/sensor-setup-choices.png" alt="Valg mellom passende radiosignalkilder"><br><b>Velg mellom flere treff</b></td><td><img src="images/sensor-setup-confirm.png" alt="Bekreftelse før lagring"><br><b>Bekreft før lagring</b></td></tr>
+</table>
+
+De nye menybildene viser VoltDeck 2026.11-v1 i ETHOS 26.2.0 RC2-simulatoren for X20RS med eksempelsensorer. Navn og antall treff avhenger av modellen din.
 
 ## 1. Appearance
 

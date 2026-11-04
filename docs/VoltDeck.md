@@ -23,8 +23,8 @@ See the [illustrated configuration guide](Configuration.md) or the
 
 ## Installation
 
-Download [VoltDeck-2026.10-v11.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v11/VoltDeck-2026.10-v11.zip) from the
-[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v11). Use the named widget package,
+Download [VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip) from the
+[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v1). Use the named widget package,
 not the automatically generated repository source archive. The same ZIP supports
 Suite and manual installation.
 
@@ -45,7 +45,7 @@ Restart ETHOS after installation.
 On first installation, create a full-screen widget area and select **VoltDeck**. Select your model's
 telemetry sources and enter its battery capacity in the widget configuration.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.10.11**.
+Suite displays this release as **26.11.1**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 
 If the widget still shows an older version after restarting, reconnect the radio,

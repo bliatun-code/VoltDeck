@@ -1,13 +1,13 @@
 # VoltDeck
 A full-screen battery, telemetry and power dashboard for FrSky ETHOS 1.6.6 and 26.1.2.
 
-**VoltDeck 2026.10-v11: latest release.**
+**VoltDeck 2026.11-v1: latest release.**
 
 Physical radio testing of this version passed.
 
 **Battery → Idle current floor** defaults to **0.30 A** and can be increased to **1.50 A** in **0.10 A** steps for **Consumed mAh**. A higher capacity-dependent allowance still applies, capped at 1.50 A. Changing the value requires a fresh ten-second check and retains consumption, timers and flight counts.
 
-[Download VoltDeck-2026.10-v11.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v11/VoltDeck-2026.10-v11.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.10-v11)
+[Download VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v1)
 
 <table>
 <tr>
@@ -20,7 +20,7 @@ Physical radio testing of this version passed.
 </tr>
 </table>
 
-Genuine X20RS / ETHOS 26.1.2 simulator captures from VoltDeck 2026.10-v9, with controlled illustrative telemetry. Display layouts are unchanged in 2026.10-v11. No physical sensors were connected.
+Genuine X20RS / ETHOS 26.1.2 simulator captures from VoltDeck 2026.10-v9, with controlled illustrative telemetry. Display layouts are unchanged in 2026.11-v1. No physical sensors were connected.
 
 [Full display gallery and sensor setups](docs/Display-gallery.md) |
 [Norsk visningsgalleri](docs/Visningsgalleri-norsk.md) |
@@ -73,9 +73,13 @@ Changing style or image does not change calculation methods, telemetry sources, 
 - Source-named RSSI/VFR readings, correct inactive units and per-slot visual profiles.
 - Uses native ETHOS fonts and your selected model picture.
 
+## Sensor setup
+
+Discover the sensors in ETHOS, then open **Configure widget → Sensor setup → Suggest sensors**. Review the matches, choose between alternatives and use **Apply... → Use suggestions** to save. Existing available selections are kept. [Step-by-step guide](docs/Configuration.md#sensor-setup).
+
 ## Install VoltDeck
 
-Download [VoltDeck-2026.10-v11.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.10-v11/VoltDeck-2026.10-v11.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
+Download [VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
 
 - **FrSky Suite:** Connect the radio, open **Lua library**, choose **Install Lua scripts**, select the ZIP and click **Install scripts**.
 - **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all extracted files into it. The final Lua path is `/scripts/VoltDeck/main.lua`.
@@ -84,7 +88,7 @@ Restart ETHOS after installation.
 On first installation, select **VoltDeck** in a full-screen widget area and follow the
 [illustrated guide](docs/Configuration.md) for your model's sources and battery settings.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.10.11**.
+Suite displays this release as **26.11.1**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 If the widget still shows an older version after restarting, follow the
 [installation troubleshooting](docs/VoltDeck.md#installation).

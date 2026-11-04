@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11-v1 - 2026-11-04
+
+- Sensor setup finds suitable sensors for empty fields. Review the suggestions and confirm before saving.
+- Choose between matching sensors when more than one is available.
+- Improved handling of saved sensor selections and widget changes.
+
 ## 2026.10-v11 - release, 2026-10-30
 
 - Add Battery > Idle current floor for Consumed mAh: default 0.30 A, adjustable to 1.50 A in 0.10 A steps. Higher capacity-dependent allowances remain, capped at 1.50 A.
