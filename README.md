@@ -3,10 +3,6 @@ A full-screen battery, telemetry and power dashboard for FrSky ETHOS 1.6.6 and 2
 
 **VoltDeck 2026.11-v1: latest release.**
 
-Physical radio testing of this version passed.
-
-**Battery → Idle current floor** defaults to **0.30 A** and can be increased to **1.50 A** in **0.10 A** steps for **Consumed mAh**. A higher capacity-dependent allowance still applies, capped at 1.50 A. Changing the value requires a fresh ten-second check and retains consumption, timers and flight counts.
-
 [Download VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v1)
 
 <table>
