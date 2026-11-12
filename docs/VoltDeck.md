@@ -23,18 +23,19 @@ See the [illustrated configuration guide](Configuration.md) or the
 
 ## Installation
 
-Download [VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip) from the
-[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v1). Use the named widget package,
+Download [VoltDeck-2026.11-v2.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip) from the
+[release assets](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v2). Use the named widget package,
 not the automatically generated repository source archive. The same ZIP supports
 Suite and manual installation.
 
 - **FrSky Suite:** Connect the radio, open **Lua library**, choose **Install Lua scripts**, select the ZIP and click **Install scripts**. Suite installs the files into `/scripts/VoltDeck/`.
-- **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all five extracted files into it:
+- **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all six extracted files into it. `main.lua` only loads `deck.lua`; both files are required:
 
 ```text
 scripts/
   VoltDeck/
     main.lua
+    deck.lua
     ethos_lua_manifest.json
     INSTALL.txt
     LICENSE
@@ -45,7 +46,7 @@ Restart ETHOS after installation.
 On first installation, create a full-screen widget area and select **VoltDeck**. Select your model's
 telemetry sources and enter its battery capacity in the widget configuration.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.11.1**.
+Suite displays this release as **26.11.2**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 
 If the widget still shows an older version after restarting, reconnect the radio,
@@ -81,7 +82,7 @@ The displayed result is limited to 0 through 100 percent. With **Consumed mAh**,
 VoltDeck first checks the counter against a stable, low-current voltage reference.
 The check needs 10 seconds of valid readings within a 0.20 V range for the whole
 pack. Current must be nonnegative and within the check limit. The limit scales
-at 0.15 C (`3 × capacity / 20000 A`), with **Battery → Idle current floor**
+at 0.15 C (`3 × capacity / 20000 A`), with **Battery → Idle current floor** (**Advanced settings**)
 selectable from 0.30 to 1.50 A in 0.10 A steps and an overall 1.50 A cap.
 The effective limit is `min(1.50, max(selected floor, 3 × capacity / 20000))` A.
 With the default 0.30 A floor, 450 mAh allows 0.30 A, 2500 mAh allows 0.375 A
@@ -102,7 +103,7 @@ With **Consumed mAh**, acceptance lasts for the battery connection; voltage sag
 during flight does not repeat the comparison. A long pack-telemetry loss or a radio restart requires
 a new check. If consumption unexpectedly falls, remaining charge becomes unknown
 and explicit counter acceptance is required after checking the battery and reading.
-**Accept battery counter...** shows progress, remaining blockers and whether
+**Accept battery...** shows progress, remaining blockers and whether
 the counter estimate is higher or lower than the voltage reference. It does
 not reset the sensor.
 
@@ -133,7 +134,8 @@ it cannot identify an individual weak cell.
 Settings and flight counts are saved separately for each model. Keep the model,
 widget settings and flight-counter files together in your backup when updating
 or moving to another SD card. Last-flight graphs and statistics are cleared
-when the radio restarts.
+when the radio restarts or you switch to another model. VoltDeck loads only for
+models that use it and is released again when you switch to a model without it.
 
 ## Model image
 
@@ -161,7 +163,7 @@ One connected-pack session can count at most once. Motor disarming or disabling
 the airborne gate pauses qualification/flight time, without clearing the count
 latch, statistics or RF history. Valid pack voltage returning before the loss
 delay resumes that same session. Only continuous missing/invalid/non-positive
-pack voltage for **Pack loss delay** ends it (default 10 s, configurable 3-120 s).
+pack voltage for **Pack loss delay** ends it (default 10 s, configurable 3-120 s under **Advanced settings**).
 
 An extended telemetry loss can look like a battery disconnect, and a swap shorter
 than the configured delay cannot reliably be detected. Increase the delay, for
@@ -172,7 +174,7 @@ The last qualified log remains visible after aircraft power-off and while a new
 candidate qualifies. The new candidate replaces it only on successful qualification.
 Qualification and flight time exclude pauses caused by disarming, a closed
 airborne gate or missing pack voltage; graph elapsed time includes them.
-Radio restart clears these statistics and graphs.
+A radio restart or model switch clears these statistics and graphs.
 
 RF graph colors are visual thresholds, not changes to the radio's alarms.
 

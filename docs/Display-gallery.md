@@ -30,7 +30,7 @@ Open the widget menu and choose **Configure widget > Appearance**. **Display sty
 </tr>
 </table>
 
-The main views use **Lower deck > Show = RPM + W + cell**, **Meter style = Retro LCD**, **Custom source = ESC temperature**, **Custom label = ESC TEMP**, **Custom position = 3**, **Custom min/max = 0/150**, **Decimals (-1 auto) = 0**, **Remaining from = Consumed mAh**, **mAh display = Remaining** and **RPM value = Measured RPM**. **RPM scale = Manual**, **RPM max = 12000** and **Watt max = 1500**. Chemistry and capacity are given below. With a picture/Digital, Custom occupies one of the three slots; Deck + Hidden also shows the cell field.
+The main views use **Lower deck > Show = RPM + W + cell**, **Meter style = Retro LCD**, **Custom source = ESC temperature**, **Custom label = ESC TEMP**, **Custom position = 3**, **Custom min/max = 0/150**, **Decimals (-1 auto) = 0**, **Remaining from = Consumed mAh**, **mAh display = Remaining** and **RPM value = Measured RPM**. **RPM scale = Manual**, **RPM max = 12000** and **Watt max = 1500**. Chemistry and capacity are given below. With a picture/Digital, Custom occupies one of the three slots; Deck + Hidden also shows the cell field. Custom min/max, Decimals, RPM scale, RPM max and Watt max are under **Advanced settings**.
 
 ## Aircraft, readings and telemetry
 
@@ -301,7 +301,7 @@ Settings: **Display style = Deck**; **Image source = Hidden**; **Lower deck > Sh
 
 ![KV estimate, not measured RPM](images/native-voltdeck-kv-estimate.png)
 
-Settings: **Display style = Deck**; **Image source = Hidden**; **Lower deck > Show = RPM**; **Meter style = Retro LCD**; **Remaining from = Consumed mAh**; **mAh display = Remaining**; **RPM value = KV x volts (est.)**; **Motor KV = 500**; **Estimate factor = 90%**.
+Settings: **Display style = Deck**; **Image source = Hidden**; **Lower deck > Show = RPM**; **Meter style = Retro LCD**; **Remaining from = Consumed mAh**; **mAh display = Remaining**; **RPM value = KV x volts (est.)**; **Motor KV = 500**; **Estimate factor = 90%** (**Advanced settings**).
 
 </details>
 
@@ -356,7 +356,7 @@ Settings: **Display style = Deck**; **Image source = Hidden**; **Lower deck > Sh
 
 ## Other choices and source dependencies
 
-This gallery covers the distinct display choices, rather than every combination of arbitrary colors, sensor names and readings. **Radio theme / Black / Custom**, an accent color and optional font can be set independently. Leave Font file blank for native ETHOS fonts. Full screen means the radio’s complete LCD, including at a lower resolution.
+This gallery covers the distinct display choices, rather than every combination of arbitrary colors, sensor names and readings. **Radio theme / Black / Custom**, an accent color and optional font can be set independently. Leave Font file (**Advanced settings**) blank for native ETHOS fonts. Full screen means the radio’s complete LCD, including at a lower resolution.
 
 Battery types are **Lipo / LiHV / Li-ion / LiFe**. RPM scaling can be manual or follow motor KV and the pack; a KV estimate is labelled and is not a measurement. Meter limits, red zone, Custom unit/decimals, RF profiles, alerts and flight logging are covered in the configuration guide.
 

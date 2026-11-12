@@ -30,7 +30,7 @@ Velg **Appearance > Display style = Deck / Digital** og deretter **Image source 
 </tr>
 </table>
 
-Hovedbildene bruker **Lower deck > Show = RPM + W + cell**, **Meter style = Retro LCD**, **Custom source = ESC-temperatur**, **Custom label = ESC TEMP**, **Custom position = 3**, **Custom min/max = 0/150**, **Decimals (-1 auto) = 0**, **Remaining from = Consumed mAh**, **mAh display = Remaining** og **RPM value = Measured RPM**. **RPM scale = Manual**, **RPM max = 12000** og **Watt max = 1500**. Kjemi og kapasitet er oppgitt nedenfor. Med modellbilde/Digital bruker Custom én av de tre plassene; Deck + Hidden viser også cellefeltet.
+Hovedbildene bruker **Lower deck > Show = RPM + W + cell**, **Meter style = Retro LCD**, **Custom source = ESC-temperatur**, **Custom label = ESC TEMP**, **Custom position = 3**, **Custom min/max = 0/150**, **Decimals (-1 auto) = 0**, **Remaining from = Consumed mAh**, **mAh display = Remaining** og **RPM value = Measured RPM**. **RPM scale = Manual**, **RPM max = 12000** og **Watt max = 1500**. Kjemi og kapasitet er oppgitt nedenfor. Med modellbilde/Digital bruker Custom én av de tre plassene; Deck + Hidden viser også cellefeltet. Custom min/max, Decimals, RPM scale, RPM max og Watt max ligger under **Advanced settings**.
 
 ## Modell, verdier og telemetri
 
@@ -301,7 +301,7 @@ Valg: **Display style = Deck**; **Image source = Hidden**; **Lower deck > Show =
 
 ![KV estimate, not measured RPM](images/native-voltdeck-kv-estimate.png)
 
-Valg: **Display style = Deck**; **Image source = Hidden**; **Lower deck > Show = RPM**; **Meter style = Retro LCD**; **Remaining from = Consumed mAh**; **mAh display = Remaining**; **RPM value = KV x volts (est.)**; **Motor KV = 500**; **Estimate factor = 90%**.
+Valg: **Display style = Deck**; **Image source = Hidden**; **Lower deck > Show = RPM**; **Meter style = Retro LCD**; **Remaining from = Consumed mAh**; **mAh display = Remaining**; **RPM value = KV x volts (est.)**; **Motor KV = 500**; **Estimate factor = 90%** (**Advanced settings**).
 
 </details>
 
@@ -356,7 +356,7 @@ Valg: **Display style = Deck**; **Image source = Hidden**; **Lower deck > Show =
 
 ## Øvrige valg og kildeavhengigheter
 
-Dette galleriet dekker de ulike visningsvalgene; det er ikke alle kombinasjoner av egendefinerte farger, sensornavn og tallverdier. **Radio theme / Black / Custom**, egen aksentfarge og valgfri font kan tilpasses uavhengig. La Font file være tom for native ETHOS-fonter. Fullskjerm betyr hele LCD-flaten til radioen, også ved lavere oppløsning.
+Dette galleriet dekker de ulike visningsvalgene; det er ikke alle kombinasjoner av egendefinerte farger, sensornavn og tallverdier. **Radio theme / Black / Custom**, egen aksentfarge og valgfri font kan tilpasses uavhengig. La Font file (**Advanced settings**) være tom for native ETHOS-fonter. Fullskjerm betyr hele LCD-flaten til radioen, også ved lavere oppløsning.
 
 Batteritypene er **Lipo / LiHV / Li-ion / LiFe**. RPM-skala kan være manuell eller følge motor-KV og batteriet; KV-estimat er merket og er ikke en måling. Egne metergrenser, rød sone, Custom-enhet/desimaler, RF-profiler, alarmer og flylogg er beskrevet i oppsettsguiden.
 

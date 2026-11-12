@@ -1,9 +1,9 @@
 # VoltDeck
 A full-screen battery, telemetry and power dashboard for FrSky ETHOS 1.6.6 and 26.1.2.
 
-**VoltDeck 2026.11-v1: latest release.**
+**VoltDeck 2026.11-v2: latest release.**
 
-[Download VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v1)
+[Download VoltDeck-2026.11-v2.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v2)
 
 <table>
 <tr>
@@ -16,14 +16,14 @@ A full-screen battery, telemetry and power dashboard for FrSky ETHOS 1.6.6 and 2
 </tr>
 </table>
 
-Genuine X20RS / ETHOS 26.1.2 simulator captures from VoltDeck 2026.10-v9, with controlled illustrative telemetry. Display layouts are unchanged in 2026.11-v1. No physical sensors were connected.
+Genuine X20RS / ETHOS 26.1.2 simulator captures from VoltDeck 2026.10-v9, with controlled illustrative telemetry. Display layouts are unchanged in 2026.11-v2. No physical sensors were connected.
 
 [Full display gallery and sensor setups](docs/Display-gallery.md) |
 [Norsk visningsgalleri](docs/Visningsgalleri-norsk.md) |
 [Illustrated configuration guide](docs/Configuration.md) |
 [Norsk veiledning](docs/Konfigurasjon-norsk.md) |
 [Installation and usage](docs/VoltDeck.md) |
-[Lua source](scripts/VoltDeck/main.lua)
+[Lua source](scripts/VoltDeck/deck.lua)
 
 Ultimate AMR 60: 6S Lipo / 3300 mAh, measured RPM and ESC temperature. See the gallery for exact program choices, source roles and units.
 
@@ -68,6 +68,8 @@ Changing style or image does not change calculation methods, telemetry sources, 
 - Optional automatic flight-log opening after sustained pack-voltage loss.
 - Source-named RSSI/VFR readings, correct inactive units and per-slot visual profiles.
 - Uses native ETHOS fonts and your selected model picture.
+- Configure opens with the everyday settings; **Advanced settings** shows the tuning fields.
+- Loads only for models that use VoltDeck and is released again when you switch to a model without it.
 
 ## Sensor setup
 
@@ -75,16 +77,16 @@ Discover the sensors in ETHOS, then open **Configure widget → Sensor setup →
 
 ## Install VoltDeck
 
-Download [VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
+Download [VoltDeck-2026.11-v2.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
 
 - **FrSky Suite:** Connect the radio, open **Lua library**, choose **Install Lua scripts**, select the ZIP and click **Install scripts**.
-- **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all extracted files into it. The final Lua path is `/scripts/VoltDeck/main.lua`.
+- **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all six extracted files into it. `main.lua` only loads `deck.lua`; both files are required.
 
 Restart ETHOS after installation.
 On first installation, select **VoltDeck** in a full-screen widget area and follow the
 [illustrated guide](docs/Configuration.md) for your model's sources and battery settings.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.11.1**.
+Suite displays this release as **26.11.2**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 If the widget still shows an older version after restarting, follow the
 [installation troubleshooting](docs/VoltDeck.md#installation).
@@ -96,11 +98,11 @@ Before updating, back up the ETHOS model, all `/scripts/vc3*.cfg` files and a co
 Motor disarming pauses qualification/flight time but retains the same pack
 session, its statistics and RF history. Rearming does not count another flight.
 Only continuous loss of valid positive pack voltage for **Pack loss delay**
-ends the session (default 10 s; adjustable 3-120 s).
+ends the session (default 10 s; adjustable 3-120 s under **Advanced settings**).
 
 The last qualified log stays visible after disconnecting the aircraft and while
 the next flight is qualifying. It is replaced only when that next flight qualifies.
-These logs stay in RAM, not across a radio restart. RF graphs include motor pauses;
+These logs stay in RAM; a radio restart or a switch to another model clears them. The flight count stays saved. RF graphs include motor pauses;
 the flight-time figure only accumulates while all qualification gates pass.
 An extended telemetry loss can resemble a disconnected battery; choose a longer
 delay, for example 30 s, if needed.
@@ -117,7 +119,7 @@ from either view to Dashboard. See the [menu walkthrough](docs/Configuration.md#
 ### Optional automatic flight log
 
 Enable **Auto-open log** under **Flight log** (default Off), then set
-**Extra log delay** (default 5 s, range 0-120 s). This additional delay starts
+**Extra log delay** under **Advanced settings** (default 5 s, range 0-120 s). This additional delay starts
 after **Pack loss delay** completes a qualified session. Returning pack voltage
 or a manual view/settings change cancels pending navigation.
 See the [configuration guide](docs/Configuration.md#automatic-flight-log-view).

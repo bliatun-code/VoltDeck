@@ -7,10 +7,10 @@
 **Before installation:** back up the ETHOS model and `/scripts/vc3*.cfg` pairs. Read
 [VD8 backup and rollback](#vd8-backup-and-rollback); v10 cannot read settings saved as VD8.
 
-In **FrSky Suite > Lua library > Install Lua scripts**, select **VoltDeck-2026.11-v1.zip** from the [release package](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip) and
+In **FrSky Suite > Lua library > Install Lua scripts**, select **VoltDeck-2026.11-v2.zip** from the [release package](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip) and
 click **Install scripts**. The same ZIP supports manual installation into `/scripts/VoltDeck/`.
 Follow the [installation steps](../README.md#install-voltdeck), restart ETHOS and check
-the version at the top of **Configure widget**. Suite displays this release as **26.11.1**.
+the version at the top of **Configure widget**. Suite displays this release as **26.11.2**.
 Keep the configured widget and existing cfg/dat files when updating.
 
 **Full screen:** The widget area must fill the radio's complete LCD, including on radios with a lower resolution. A split area shows **Full screen required**; choose a full-screen area to restore the instruments. **Screen size unavailable** means the LCD dimensions could not be read; the app retries automatically. Selected sources and settings are retained.
@@ -19,7 +19,7 @@ See [upgrading and rollback](Configuration.md#vd8-backup-and-rollback) before re
 
 ## VD8 backup and rollback
 
-2026.11-v1 keeps the VD8 format introduced in v11. The rollback steps below still apply when returning to v10.
+2026.11-v2 keeps the VD8 format introduced in v11. The rollback steps below still apply when returning to v10.
 
 Before installing or starting v11, back up the **ETHOS model** and copy all existing
 **`/scripts/vc3*.cfg` files** to the computer. Retain a complete before-install file list as well
@@ -74,6 +74,10 @@ Earlier menu and Appearance pictures below remain field references. The new Sens
 </tr>
 </table>
 
+## Advanced settings
+
+**Configure widget** opens with the everyday settings. Turn on **Advanced settings** at the top and reopen Configure to show tuning fields such as thresholds, delays, scales and alert sounds. Hidden fields keep their values and continue to work. The switch returns to OFF after a restart. Fields marked **(Advanced settings)** below appear only when it is on.
+
 ## Sensor setup
 
 Discover the model's sensors in **ETHOS → Telemetry** first. Open **Configure widget → Sensor setup**.
@@ -91,7 +95,7 @@ Sensor setup does not create calculated sensors. If consumed mAh is missing, cre
 <tr><td><img src="images/sensor-setup-choices.png" alt="Choice between matching radio-link sensors"><br><b>Choose between alternatives</b></td><td><img src="images/sensor-setup-confirm.png" alt="Confirmation before saving"><br><b>Confirm before saving</b></td></tr>
 </table>
 
-These new menu captures show VoltDeck 2026.11-v1 in the ETHOS 26.2.0 RC2 X20RS simulator with example sensors. Names and match counts depend on your model.
+These menu captures show VoltDeck 2026.11-v2 in the ETHOS 26.2.0 RC2 X20RS simulator with example sensors. Names and match counts depend on your model.
 
 ## 1. Appearance
 
@@ -108,7 +112,7 @@ These new menu captures show VoltDeck 2026.11-v1 in the ETHOS 26.2.0 RC2 X20RS s
 | Background | **Radio theme** follows ETHOS colors; **Black** uses a black background; **Custom** uses your background color. |
 | Background color | Active with **Custom**. |
 | Accent color | Active with **Black** or **Custom**. **Radio theme** supplies its own accent. |
-| Font file | Optional font path. Leave blank for native ETHOS fonts. |
+| Font file (Advanced settings) | Optional font path. Leave blank for native ETHOS fonts. |
 | Image source | **Selected model** reuses the model picture; **Image file** selects a separate picture; **Hidden** removes it. |
 | Image file | Active with **Image file**. Choose an image from `/bitmaps/models`. |
 
@@ -131,12 +135,12 @@ see [NOTICE](../NOTICE.md) for its terms.
 
 ![Battery settings](images/voltdeck-setup-battery.png)
 
-The older reference picture does not show the new **Idle current floor** field immediately after **Remaining from**. Use the current table below.
+The older reference picture does not show **Idle current floor**. With **Advanced settings** on, it appears immediately after **Remaining from**. Use the current table below.
 
 | Field | What to select |
 |---|---|
 | Remaining from | **Consumed mAh** uses capacity minus consumption after the pack check below. **% sensor** uses a remaining-charge percentage. **Voltage estimate** estimates charge from pack voltage, battery type and cell count. |
-| Idle current floor | Defaults to **0.30 A**; increase to **1.50 A** in **0.10 A** steps. Active only with **Consumed mAh**. The effective limit is the larger of this setting and the capacity allowance, capped at 1.50 A. A value change starts a fresh check and keeps consumption, timers and flight counts. |
+| Idle current floor (Advanced settings) | Defaults to **0.30 A**; increase to **1.50 A** in **0.10 A** steps. Active only with **Consumed mAh**. The effective limit is the larger of this setting and the capacity allowance, capped at 1.50 A. A value change starts a fresh check and keeps consumption, timers and flight counts. |
 | Battery type | Lipo, LiHV, Li-ion or LiFe, matching the pack. Used by the voltage estimate, cell-meter scale, consumption check, full-pack KV scale and battery label. |
 | Capacity | Actual pack capacity in mAh. Also used by **mAh display / Remaining**, even when the main battery percentage comes from another method. |
 | Cells | Number of series cells. Used by the battery label, average cell voltage, consumption check, voltage estimate and full-pack KV scale. |
@@ -152,7 +156,7 @@ new or recharged pack; VoltDeck does not reset that sensor.
 
 An unexpected consumption-counter decrease makes calculated remaining capacity
 unknown. After checking the actual charge and mAh reading, use
-**Accept battery counter...** as described under [Widget actions](#widget-actions).
+**Accept battery...** as described under [Widget actions](#widget-actions).
 Brief telemetry loss or motor disarming does not accept a reset automatically.
 
 With **% sensor** or **Voltage estimate**, this reset guard still protects the
@@ -202,10 +206,10 @@ rounded percentages can therefore give a result 0.1 point lower.
 | Difference | Result |
 |---|---|
 | 10 percentage points or less | Automatically accepted; the calculated percentage and battery segments appear. |
-| More than 10, up to and including 20 points | **CHECK PACK/COUNTER** remains red and remaining charge stays unknown. Check the pack and sensor, then use **Accept battery counter...** to review both percentages and the difference before confirming. |
+| More than 10, up to and including 20 points | **CHECK PACK/COUNTER** remains red and remaining charge stays unknown. Check the pack and sensor, then use **Accept battery...** to review both percentages and the difference before confirming. |
 | More than 20 points | Remaining charge stays unknown. Correct the charge, battery settings or consumption reading; the menu cannot bypass this limit. |
 
-**Accept battery counter...** shows what is holding up the check, including
+**Accept battery...** shows what is holding up the check, including
 missing or unsuitable sources, measured current versus its limit, voltage
 variation or progress through the 10-second window. A higher counter estimate
 warns of possible overestimation; a lower one asks you to check consumption,
@@ -215,7 +219,7 @@ Live telemetry and the battery setup must still be valid when you confirm.
 
 For **LiFe**, voltage cannot provide a dependable percentage comparison.
 After the same low-current check, inspect actual charge, capacity and consumed
-mAh and confirm through **Accept battery counter...**. There is no calculated
+mAh and confirm through **Accept battery...**. There is no calculated
 voltage percentage or difference to approve for this type.
 
 Acceptance belongs to that battery connection. During flight, VoltDeck uses
@@ -273,10 +277,10 @@ A passed check does not guarantee a particular reserve at landing.
 | Field | What it does |
 |---|---|
 | Battery alert | Enables the widget's low-battery sound at **30% or below**. |
-| Alert on estimate | Active when the alert is enabled and **Remaining from = Voltage estimate**. Allows the approximate voltage percentage to trigger audio. |
-| Repeat | Minimum time between alerts, in seconds. Active when the alert is enabled. |
-| Audio folder | Folder for the sound picker, normally `/audio`. Active when the alert is enabled. Change the folder, then reopen configuration before picking a file. |
-| Alert WAV | Active when the alert is enabled. Select a PCM WAV: **32 kHz, mono, 16-bit**. A missing or invalid file uses a tone. |
+| Alert on estimate (Advanced settings) | Active when the alert is enabled and **Remaining from = Voltage estimate**. Allows the approximate voltage percentage to trigger audio. |
+| Repeat (Advanced settings) | Minimum time between alerts, in seconds. Active when the alert is enabled. |
+| Audio folder (Advanced settings) | Folder for the sound picker, normally `/audio`. Active when the alert is enabled. Change the folder, then reopen configuration before picking a file. |
+| Alert WAV (Advanced settings) | Active when the alert is enabled. Select a PCM WAV: **32 kHz, mono, 16-bit**. A missing or invalid file uses a tone. |
 
 Repetition waits for the selected sound to finish. Brief recovery or missing
 readings do not restart the waiting interval. Preview does not play alerts.
@@ -322,24 +326,26 @@ model telemetry is absent.
 
 ## 4. RF signals
 
+All fields in this section are under **Advanced settings**. While it is off, the RF profiles, scale and thresholds keep their saved values.
+
 ![RF profile settings](images/voltdeck-setup-rf.png)
 
 ![Remaining RF thresholds](images/voltdeck-setup-rf-more.png)
 
 | Field, in menu order | What it controls |
 |---|---|
-| RF1 profile | **ACCESS / TD / TW**, **ACCST** or **Custom**, for slot 1 and its flight graph. Choose the protocol, rather than relying on the sensor's frequency name. |
-| RF2 profile | Same choices for slot 2 and its flight graph. |
-| RSSI scale min | Lower end of the RSSI meter/graph, in dB. |
-| RSSI scale max | Upper end of the RSSI meter/graph, in dB; must exceed the minimum. VFR always uses 0–100%. |
-| RF1 low RSSI | Slot 1's yellow threshold in dB; active with **RF1 profile = Custom**. |
-| RF1 critical RSSI | Slot 1's red threshold in dB; active with **Custom**. |
-| RF1 early VFR | Slot 1's yellow threshold in %; active with **Custom**. |
-| RF1 low VFR | Slot 1's red threshold in %; active with **Custom**. |
-| RF2 low RSSI | Slot 2's yellow threshold in dB; active with **RF2 profile = Custom**. |
-| RF2 critical RSSI | Slot 2's red threshold in dB; active with **Custom**. |
-| RF2 early VFR | Slot 2's yellow threshold in %; active with **Custom**. |
-| RF2 low VFR | Slot 2's red threshold in %; active with **Custom**. |
+| RF1 profile (Advanced settings) | **ACCESS / TD / TW**, **ACCST** or **Custom**, for slot 1 and its flight graph. Choose the protocol, rather than relying on the sensor's frequency name. |
+| RF2 profile (Advanced settings) | Same choices for slot 2 and its flight graph. |
+| RSSI scale min (Advanced settings) | Lower end of the RSSI meter/graph, in dB. |
+| RSSI scale max (Advanced settings) | Upper end of the RSSI meter/graph, in dB; must exceed the minimum. VFR always uses 0–100%. |
+| RF1 low RSSI (Advanced settings) | Slot 1's yellow threshold in dB; active with **RF1 profile = Custom**. |
+| RF1 critical RSSI (Advanced settings) | Slot 1's red threshold in dB; active with **Custom**. |
+| RF1 early VFR (Advanced settings) | Slot 1's yellow threshold in %; active with **Custom**. |
+| RF1 low VFR (Advanced settings) | Slot 1's red threshold in %; active with **Custom**. |
+| RF2 low RSSI (Advanced settings) | Slot 2's yellow threshold in dB; active with **RF2 profile = Custom**. |
+| RF2 critical RSSI (Advanced settings) | Slot 2's red threshold in dB; active with **Custom**. |
+| RF2 early VFR (Advanced settings) | Slot 2's yellow threshold in %; active with **Custom**. |
+| RF2 low VFR (Advanced settings) | Slot 2's red threshold in %; active with **Custom**. |
 
 Select **Custom** before editing that slot's limits. Both dB and % limits are
 available because the dashboard and graph can use different kinds of RF source.
@@ -366,11 +372,11 @@ These are visual thresholds. They do not configure the radio's alarms;
 | Custom source | Any suitable numeric source, available whenever Show is not **Hidden**. Its unit comes from the source. Choose **---** to remove the additional row. |
 | Custom position | Position **1**, **2** or **3** from top to bottom. Active when a Custom source accompanies another display. With fewer rows, a position beyond the last row places Custom last. |
 | Custom label | Active when Custom is included. Leave blank to use the source name. |
-| Custom min | Lower end of the custom meter; active when Custom is included with **Retro LCD**. |
-| Custom max | Upper end of the custom meter; active when Custom is included with **Retro LCD**. Must exceed the minimum. |
-| Decimals (-1 auto) | Active when Custom is included. **-1** uses the source's decimals; 0–3 selects a fixed number. |
-| Red zone | Start of the red part, as a percentage of the meter range, for **RPM**, **Watts** and **Custom** with **Retro LCD**. Cell volts and Voltage estimate use battery thresholds instead. |
-| Watt max | Upper limit in W, active when **Watts** is included in a **Retro LCD** display. |
+| Custom min (Advanced settings) | Lower end of the custom meter; active when Custom is included with **Retro LCD**. |
+| Custom max (Advanced settings) | Upper end of the custom meter; active when Custom is included with **Retro LCD**. Must exceed the minimum. |
+| Decimals (-1 auto) (Advanced settings) | Active when Custom is included. **-1** uses the source's decimals; 0–3 selects a fixed number. |
+| Red zone (Advanced settings) | Start of the red part, as a percentage of the meter range, for **RPM**, **Watts** and **Custom** with **Retro LCD**. Cell volts and Voltage estimate use battery thresholds instead. |
+| Watt max (Advanced settings) | Upper limit in W, active when **Watts** is included in a **Retro LCD** display. |
 
 Watts is calculated from **Pack voltage × Current**, so no separate power sensor
 is needed. It is electrical input power. Cell volts is **Pack voltage ÷ Cells**;
@@ -441,9 +447,9 @@ its limits.
 | RPM source | Actual mechanical speed in **rpm** (ETHOS may display **r/m**). Active for a measured-RPM lower deck or when logging is enabled. The flight log keeps measured RPM even if the dashboard shows an estimate. |
 | RPM value | **Measured RPM** or **KV x volts (est.)**. Active when the lower deck includes RPM. |
 | Motor KV | Motor rating in rpm/V. Used by a KV estimate, the **Full-pack KV** meter scale, and the flight log's KV-potential field. Logging keeps this field active even without an RPM lower deck. |
-| Estimate factor | 10–100%, active for a KV-estimated RPM display. Default 100% shows no-load potential; choose a lower factor only from measurements of your motor/propeller setup. |
-| RPM scale | **Manual** or **Full-pack KV**, active for an RPM **Retro LCD** meter. The latter uses battery type, cell count and KV to keep a fixed full-pack scale. |
-| RPM max | Manual meter ceiling in rpm. Also available as the fallback when **Full-pack KV** has no valid KV value. Active only for the applicable RPM **Retro LCD** scale. |
+| Estimate factor (Advanced settings) | 10–100%, active for a KV-estimated RPM display. Default 100% shows no-load potential; choose a lower factor only from measurements of your motor/propeller setup. |
+| RPM scale (Advanced settings) | **Manual** or **Full-pack KV**, active for an RPM **Retro LCD** meter. The latter uses battery type, cell count and KV to keep a fixed full-pack scale. |
+| RPM max (Advanced settings) | Manual meter ceiling in rpm. Also available as the fallback when **Full-pack KV** has no valid KV value. Active only for the applicable RPM **Retro LCD** scale. |
 
 KV × live pack voltage estimates electrical speed potential. It does not measure
 shaft speed. The dashboard labels it **RPM ESTIMATE**. Its factor is separate
@@ -463,16 +469,16 @@ from the flight log's uncorrected **KV potential**.
 | Arm switch | Actual motor-arm switch or logic condition. Required for logging. Does not gate the **Consumed mAh** pack check. With **% sensor** or **Voltage estimate**, the optional remaining-mAh counter-reset guard still requires a valid actual ARM OFF indication for acceptance, even when logging is Off. |
 | Throttle source | Actual throttle control/channel. Remains active for diagnostics when logging is Off. |
 | Airborne gate | Optional switch/logic condition that must be ON to accumulate qualifying time. **---** and **Always on** pass. Remains active for diagnostics. |
-| Throttle low (raw) | Raw value at zero throttle, shown in **Flight diagnostics**. Default -1024. |
-| Throttle high (raw) | Raw value at full throttle. Default 1024; must exceed the low endpoint. Both endpoints remain active for diagnostics. |
-| Flight minimum | Minimum accumulated qualifying time; default 60 s. Active when logging is On. |
-| Throttle gate | Normalized throttle threshold; default 50%. Active when logging is On. |
-| High throttle | Required accumulated time at/above the throttle gate; default 5 s. Active when logging is On. |
-| Pack loss delay | Continuous absence of valid positive **Pack voltage** before a session ends; default 10 s, range 3–120 s. Always active because it also requires a new pack check and permits a new consumption-counter reading after pack loss. |
+| Throttle low (raw) (Advanced settings) | Raw value at zero throttle, shown in **Flight diagnostics**. Default -1024. |
+| Throttle high (raw) (Advanced settings) | Raw value at full throttle. Default 1024; must exceed the low endpoint. Both endpoints remain active for diagnostics. |
+| Flight minimum (Advanced settings) | Minimum accumulated qualifying time; default 60 s. Active when logging is On. |
+| Throttle gate (Advanced settings) | Normalized throttle threshold; default 50%. Active when logging is On. |
+| High throttle (Advanced settings) | Required accumulated time at/above the throttle gate; default 5 s. Active when logging is On. |
+| Pack loss delay (Advanced settings) | Continuous absence of valid positive **Pack voltage** before a session ends; default 10 s, range 3–120 s. Always active because it also requires a new pack check and permits a new consumption-counter reading after pack loss. |
 | Auto-open log | Opens the log after a qualified session ends. Active when logging is On; default Off. |
-| Extra log delay | Additional wait after **Pack loss delay**; default 5 s, range 0–120 s. Active when logging and auto-open are both On. |
-| RF graph 1 | Optional RSSI **dB** or VFR **%** source for graph 1; blank uses **RF1 source**. Active when logging is On. |
-| RF graph 2 | Same for graph 2; blank uses **RF2 source**. Active when logging is On. |
+| Extra log delay (Advanced settings) | Additional wait after **Pack loss delay**; default 5 s, range 0–120 s. Active when logging and auto-open are both On. |
+| RF graph 1 (Advanced settings) | Optional RSSI **dB** or VFR **%** source for graph 1; blank uses **RF1 source**. Active when logging is On. |
+| RF graph 2 (Advanced settings) | Same for graph 2; blank uses **RF2 source**. Active when logging is On. |
 | Reset counter | Active when logging is On. **Reset...** opens a confirmation. Disarm and disconnect the pack long enough to end its session first. Confirmation resets this model's count and clears its retained log. |
 
 Read throttle endpoints from **Flight diagnostics**, rather than the channel
@@ -499,7 +505,7 @@ a swap shorter than the delay can be missed.
 
 The last qualified log remains visible after model shutdown and while a new
 flight qualifies. A failed candidate does not replace it. Flight counts are
-saved per model; last-flight statistics and graphs clear on radio restart.
+saved per model; last-flight statistics and graphs clear on radio restart or model switch.
 
 ### Automatic flight-log view
 
@@ -550,7 +556,7 @@ flight logging continue throughout.
 |---|---|
 | Flight log / Dashboard | Switches between the dashboard and flight log. |
 | Reset live peaks | Clears the dashboard's RPM and Watts session peaks. It does not reset the flight count or the recorded flight's maxima. |
-| Accept battery counter... | Shows the status and any remaining blockers for [the pack check](#check-before-showing-remaining-charge) with **Consumed mAh**, or reviews a reset of the optional remaining-mAh counter with another method. Check actual charge and the sensor before confirming. It cannot bypass a difference above 20 points or **CHECK CELLS/TYPE** in the pack check. Acceptance does not restore missing consumption, reset the sensor, fill the battery or change the flight count. |
+| Accept battery... | Shows the status and any remaining blockers for [the pack check](#check-before-showing-remaining-charge) with **Consumed mAh**, or reviews a reset of the optional remaining-mAh counter with another method. Check actual charge and the sensor before confirming. It cannot bypass a difference above 20 points or **CHECK CELLS/TYPE** in the pack check. Acceptance does not restore missing consumption, reset the sensor, fill the battery or change the flight count. |
 | Configure widget | Opens the setup groups above. |
 | Configure screens | Opens ETHOS's screen configuration. |
 

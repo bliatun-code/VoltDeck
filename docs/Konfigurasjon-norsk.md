@@ -7,15 +7,15 @@
 **Før installasjon:** ta backup av ETHOS-modellen og `/scripts/vc3*.cfg`-parene. Les
 [VD8 backup og tilbakeføring](#vd8-backup-og-tilbakeføring); v10 kan ikke lese innstillinger lagret som VD8.
 
-Bruk [pakken VoltDeck-2026.11-v1.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v1/VoltDeck-2026.11-v1.zip).
+Bruk [pakken VoltDeck-2026.11-v2.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip).
 Samme ZIP brukes til begge installasjonsmåtene:
 
 - **FrSky Suite:** Koble til radioen, åpne **Lua library**, velg **Install Lua scripts**, velg ZIP-filen og trykk **Install scripts**.
-- **Manuelt:** Pakk ut ZIP-filen, opprett `/scripts/VoltDeck/` på radioens skriptdisk og kopier alle de fem utpakkede filene dit. Lua-filen skal ligge som `/scripts/VoltDeck/main.lua`.
+- **Manuelt:** Pakk ut ZIP-filen, opprett `/scripts/VoltDeck/` på radioens skriptdisk og kopier alle de seks utpakkede filene dit. `main.lua` laster bare `deck.lua`; begge filene må være med.
 
 Start ETHOS på nytt etter installasjonen. Ved første installasjon velger du
 **VoltDeck** i et fullskjerms widgetfelt. Åpne **Configure widget** fra widgetmenyen
-og kontroller versjonen øverst. Suite viser denne versjonen som **26.11.1**.
+og kontroller versjonen øverst. Suite viser denne versjonen som **26.11.2**.
 Hvis installasjonen ikke vises oppdatert i Suite, gå ut av og inn i **Lua library**.
 Viser widgeten fortsatt en eldre versjon etter omstart, koble til radioen igjen,
 fjern bare `/scripts/VoltDeck/main.luac` og start ETHOS på nytt.
@@ -28,7 +28,7 @@ Se [oppgradering og tilbakeføring](Konfigurasjon-norsk.md#vd8-backup-og-tilbake
 
 ## VD8 backup og tilbakeføring
 
-2026.11-v1 beholder VD8-formatet fra v11. Fremgangsmåten nedenfor gjelder fortsatt ved tilbakeføring til v10.
+2026.11-v2 beholder VD8-formatet fra v11. Fremgangsmåten nedenfor gjelder fortsatt ved tilbakeføring til v10.
 
 Før installasjon eller første start av v11: ta backup av **ETHOS-modellen** og kopier
 alle eksisterende **`/scripts/vc3*.cfg`-filer** til datamaskinen. Behold også en fullstendig
@@ -83,6 +83,10 @@ Eldre bilder av widgetmenyen og Appearance er fortsatt feltreferanser. De nye Se
 </tr>
 </table>
 
+## Advanced settings
+
+**Configure widget** åpner med de vanlige innstillingene. Slå på **Advanced settings** øverst og åpne Configure på nytt for å se finjusteringer som terskler, forsinkelser, skalaer og varsellyder. Skjulte felt beholder verdien og virker som før. Bryteren går tilbake til OFF etter omstart. Felt merket **(Advanced settings)** nedenfor vises bare når den er på.
+
 ## Sensor setup
 
 Oppdag modellens sensorer i **ETHOS → Telemetry** først. Åpne **Configure widget → Sensor setup**.
@@ -100,7 +104,7 @@ Sensor setup oppretter ikke beregnede sensorer. Mangler consumed mAh, opprett en
 <tr><td><img src="images/sensor-setup-choices.png" alt="Valg mellom passende radiosignalkilder"><br><b>Velg mellom flere treff</b></td><td><img src="images/sensor-setup-confirm.png" alt="Bekreftelse før lagring"><br><b>Bekreft før lagring</b></td></tr>
 </table>
 
-De nye menybildene viser VoltDeck 2026.11-v1 i ETHOS 26.2.0 RC2-simulatoren for X20RS med eksempelsensorer. Navn og antall treff avhenger av modellen din.
+Menybildene viser VoltDeck 2026.11-v2 i ETHOS 26.2.0 RC2-simulatoren for X20RS med eksempelsensorer. Navn og antall treff avhenger av modellen din.
 
 ## 1. Appearance
 
@@ -117,7 +121,7 @@ De nye menybildene viser VoltDeck 2026.11-v1 i ETHOS 26.2.0 RC2-simulatoren for 
 | Background | **Radio theme** følger ETHOS-fargene; **Black** gir svart bakgrunn; **Custom** bruker din bakgrunnsfarge. |
 | Background color | Aktivt med **Custom**. |
 | Accent color | Aktivt med **Black** eller **Custom**. **Radio theme** bruker temaets aksentfarge. |
-| Font file | Valgfri fontsti. La feltet være tomt for radioens innebygde fonter. |
+| Font file (Advanced settings) | Valgfri fontsti. La feltet være tomt for radioens innebygde fonter. |
 | Image source | **Selected model** gjenbruker modellbildet; **Image file** velger et separat bilde; **Hidden** skjuler det. |
 | Image file | Aktivt med **Image file**. Velg bilde fra `/bitmaps/models`. |
 
@@ -140,12 +144,12 @@ se [NOTICE](../NOTICE.md) for bruksvilkår.
 
 ![Batteriinnstillinger](images/voltdeck-setup-battery.png)
 
-Det eldre referansebildet viser ikke det nye **Idle current floor**-feltet rett etter **Remaining from**. Bruk den oppdaterte tabellen nedenfor.
+Det eldre referansebildet viser ikke **Idle current floor**. Med **Advanced settings** på vises feltet rett etter **Remaining from**. Bruk den oppdaterte tabellen nedenfor.
 
 | Felt | Hva du velger |
 |---|---|
 | Remaining from | **Consumed mAh** bruker kapasitet minus forbruk etter batterikontrollen nedenfor. **% sensor** bruker en kilde med gjenværende prosent. **Voltage estimate** anslår lading fra pakkespenning, batteritype og celletall. |
-| Idle current floor | Standard **0,30 A**, justerbar til **1,50 A** i trinn på **0,10 A**. Aktiv bare med **Consumed mAh**. Effektiv grense er den høyeste av dette valget og kapasitetsgrensen, begrenset til 1,50 A. En verdiendring krever ny kontroll og beholder forbruk, tidtakere og flyteller. |
+| Idle current floor (Advanced settings) | Standard **0,30 A**, justerbar til **1,50 A** i trinn på **0,10 A**. Aktiv bare med **Consumed mAh**. Effektiv grense er den høyeste av dette valget og kapasitetsgrensen, begrenset til 1,50 A. En verdiendring krever ny kontroll og beholder forbruk, tidtakere og flyteller. |
 | Battery type | Lipo, LiHV, Li-ion eller LiFe, tilsvarende batteriet. Brukes av spenningsestimat, cellemålerens skala, forbrukskontroll, full-pack KV-skala og batterietikett. |
 | Capacity | Batteriets kapasitet i mAh. Brukes også av **mAh display / Remaining** når batteriprosenten kommer fra en annen metode. |
 | Cells | Antall celler i serie. Brukes av batterietikett, gjennomsnittlig cellevolt, forbrukskontroll, spenningsestimat og full-pack KV-skala. |
@@ -161,7 +165,7 @@ En spenningskilde blir ikke omregnet til prosent bare ved å velges her.
 
 Et uventet fall i forbrukstelleren gjør beregnet gjenværende kapasitet ukjent.
 Kontroller faktisk lading og mAh-avlesning før du bruker
-**Accept battery counter...**, beskrevet under [Widgetmenyen](#widgetmenyen).
+**Accept battery...**, beskrevet under [Widgetmenyen](#widgetmenyen).
 Kort telemetribortfall eller dearming godtar ikke et tellerreset automatisk.
 
 Med **% sensor** eller **Voltage estimate** beskytter denne resetsperren fortsatt
@@ -211,10 +215,10 @@ avrundede prosentene fra hverandre, kan resultatet derfor bli 0,1 poeng lavere.
 | Avvik | Resultat |
 |---|---|
 | 10 prosentpoeng eller mindre | Godtas automatisk; beregnet prosent og batterisegmentene vises. |
-| Over 10, til og med 20 prosentpoeng | **CHECK PACK/COUNTER** beholdes i rødt og gjenværende lading er ukjent. Kontroller batteri og sensor, og bruk **Accept battery counter...** for å lese begge prosentene og avviket før bekreftelse. |
+| Over 10, til og med 20 prosentpoeng | **CHECK PACK/COUNTER** beholdes i rødt og gjenværende lading er ukjent. Kontroller batteri og sensor, og bruk **Accept battery...** for å lese begge prosentene og avviket før bekreftelse. |
 | Over 20 prosentpoeng | Gjenværende lading forblir ukjent. Rett lading, batteriinnstillinger eller forbruksavlesning; menyen kan ikke omgå denne grensen. |
 
-**Accept battery counter...** viser hva som hindrer kontrollen, blant annet
+**Accept battery...** viser hva som hindrer kontrollen, blant annet
 manglende eller uegnede kilder, målt strøm mot grensen, spenningsvariasjon eller
 fremdrift i 10-sekundersvinduet. Et høyere tellerestimat varsler om mulig
 overestimering; et lavere ber deg kontrollere forbruk, kapasitet og kalibrering
@@ -224,7 +228,7 @@ Aktuell telemetri og batterioppsettet må fortsatt være gyldige når du bekreft
 
 For **LiFe** gir spenning ingen pålitelig prosentvis sammenligning.
 Etter samme lavstrømskontroll må du kontrollere faktisk lading, kapasitet og
-forbrukt mAh og bekrefte med **Accept battery counter...**. Denne batteritypen
+forbrukt mAh og bekrefte med **Accept battery...**. Denne batteritypen
 har ingen beregnet spenningsprosent eller avviksverdi å godkjenne.
 
 Godkjenningen gjelder denne batteritilkoblingen. Under flyging bruker VoltDeck
@@ -282,10 +286,10 @@ En bestått kontroll garanterer ikke en bestemt reserve ved landing.
 | Felt | Funksjon |
 |---|---|
 | Battery alert | Slår på widgetens batterilyd ved **30% eller lavere**. |
-| Alert on estimate | Aktivt når varsling er på og **Remaining from = Voltage estimate**. Tillater lydvarsel basert på det omtrentlige spenningsestimatet. |
-| Repeat | Minstetid mellom varsler, i sekunder. Aktivt når varsling er på. |
-| Audio folder | Mappe for lydvelgeren, normalt `/audio`. Aktivt når varsling er på. Endre mappen og åpne konfigurasjonen på nytt før du velger fil. |
-| Alert WAV | Aktivt når varsling er på. Velg PCM WAV: **32 kHz, mono, 16-bit**. Manglende eller ugyldig fil gir en tone. |
+| Alert on estimate (Advanced settings) | Aktivt når varsling er på og **Remaining from = Voltage estimate**. Tillater lydvarsel basert på det omtrentlige spenningsestimatet. |
+| Repeat (Advanced settings) | Minstetid mellom varsler, i sekunder. Aktivt når varsling er på. |
+| Audio folder (Advanced settings) | Mappe for lydvelgeren, normalt `/audio`. Aktivt når varsling er på. Endre mappen og åpne konfigurasjonen på nytt før du velger fil. |
+| Alert WAV (Advanced settings) | Aktivt når varsling er på. Velg PCM WAV: **32 kHz, mono, 16-bit**. Manglende eller ugyldig fil gir en tone. |
 
 Neste varsel venter til valgt lyd er ferdig. Kort tilbakekomst eller manglende
 avlesninger starter ikke venteintervallet på nytt. Preview spiller ikke varsler.
@@ -331,24 +335,26 @@ når modelltelemetrien er borte.
 
 ## 4. RF signals
 
+Alle feltene i denne delen ligger under **Advanced settings**. Når bryteren er av, beholder RF-profiler, skala og grenser de lagrede verdiene.
+
 ![RF-profiler](images/voltdeck-setup-rf.png)
 
 ![Resterende RF-grenser](images/voltdeck-setup-rf-more.png)
 
 | Felt, i menyrekkefølge | Funksjon |
 |---|---|
-| RF1 profile | **ACCESS / TD / TW**, **ACCST** eller **Custom**, for første RF-plass og dens flygraf. Velg protokollen, ikke bare etter frekvensen i sensornavnet. |
-| RF2 profile | Samme valg for andre RF-plass og dens flygraf. |
-| RSSI scale min | Nedre ende av RSSI-måler/-graf, i dB. |
-| RSSI scale max | Øvre ende av RSSI-måler/-graf, i dB; må overstige minimum. VFR bruker alltid 0–100%. |
-| RF1 low RSSI | Gul RSSI-grense i dB for plass 1; aktivt med **RF1 profile = Custom**. |
-| RF1 critical RSSI | Rød RSSI-grense i dB for plass 1; aktivt med **Custom**. |
-| RF1 early VFR | Gul VFR-grense i % for plass 1; aktivt med **Custom**. |
-| RF1 low VFR | Rød VFR-grense i % for plass 1; aktivt med **Custom**. |
-| RF2 low RSSI | Gul RSSI-grense i dB for plass 2; aktivt med **RF2 profile = Custom**. |
-| RF2 critical RSSI | Rød RSSI-grense i dB for plass 2; aktivt med **Custom**. |
-| RF2 early VFR | Gul VFR-grense i % for plass 2; aktivt med **Custom**. |
-| RF2 low VFR | Rød VFR-grense i % for plass 2; aktivt med **Custom**. |
+| RF1 profile (Advanced settings) | **ACCESS / TD / TW**, **ACCST** eller **Custom**, for første RF-plass og dens flygraf. Velg protokollen, ikke bare etter frekvensen i sensornavnet. |
+| RF2 profile (Advanced settings) | Samme valg for andre RF-plass og dens flygraf. |
+| RSSI scale min (Advanced settings) | Nedre ende av RSSI-måler/-graf, i dB. |
+| RSSI scale max (Advanced settings) | Øvre ende av RSSI-måler/-graf, i dB; må overstige minimum. VFR bruker alltid 0–100%. |
+| RF1 low RSSI (Advanced settings) | Gul RSSI-grense i dB for plass 1; aktivt med **RF1 profile = Custom**. |
+| RF1 critical RSSI (Advanced settings) | Rød RSSI-grense i dB for plass 1; aktivt med **Custom**. |
+| RF1 early VFR (Advanced settings) | Gul VFR-grense i % for plass 1; aktivt med **Custom**. |
+| RF1 low VFR (Advanced settings) | Rød VFR-grense i % for plass 1; aktivt med **Custom**. |
+| RF2 low RSSI (Advanced settings) | Gul RSSI-grense i dB for plass 2; aktivt med **RF2 profile = Custom**. |
+| RF2 critical RSSI (Advanced settings) | Rød RSSI-grense i dB for plass 2; aktivt med **Custom**. |
+| RF2 early VFR (Advanced settings) | Gul VFR-grense i % for plass 2; aktivt med **Custom**. |
+| RF2 low VFR (Advanced settings) | Rød VFR-grense i % for plass 2; aktivt med **Custom**. |
 
 Velg **Custom** før du endrer grensene for den plassen. Både dB- og %-grensene
 er tilgjengelige fordi hovedskjerm og graf kan bruke ulike typer RF-kilde.
@@ -375,11 +381,11 @@ Dette er visuelle grenser. De setter ikke radioens alarmer;
 | Custom source | En egnet tallkilde, tilgjengelig når Show ikke er **Hidden**. Enheten kommer fra kilden. Velg **---** for å fjerne den ekstra raden. |
 | Custom position | Plass **1**, **2** eller **3**, regnet ovenfra. Aktivt når en Custom-kilde vises sammen med andre verdier. Med færre rader blir en plass etter siste rad satt sist. |
 | Custom label | Aktivt når Custom er med i visningen. Tomt felt bruker kildenavnet. |
-| Custom min | Målerens nedre grense; aktivt når Custom er med i **Retro LCD**. |
-| Custom max | Målerens øvre grense; aktivt når Custom er med i **Retro LCD**. Må overstige minimum. |
-| Decimals (-1 auto) | Aktivt når Custom er med. **-1** følger kildens desimaler; 0–3 velger fast antall. |
-| Red zone | Starten på rødt område, som prosent av målerens skala, for **RPM**, **Watts** og **Custom** med **Retro LCD**. Cell volts og Voltage estimate bruker batterigrenser i stedet. |
-| Watt max | Øvre grense i W, aktivt når **Watts** inngår i en **Retro LCD**-visning. |
+| Custom min (Advanced settings) | Målerens nedre grense; aktivt når Custom er med i **Retro LCD**. |
+| Custom max (Advanced settings) | Målerens øvre grense; aktivt når Custom er med i **Retro LCD**. Må overstige minimum. |
+| Decimals (-1 auto) (Advanced settings) | Aktivt når Custom er med. **-1** følger kildens desimaler; 0–3 velger fast antall. |
+| Red zone (Advanced settings) | Starten på rødt område, som prosent av målerens skala, for **RPM**, **Watts** og **Custom** med **Retro LCD**. Cell volts og Voltage estimate bruker batterigrenser i stedet. |
+| Watt max (Advanced settings) | Øvre grense i W, aktivt når **Watts** inngår i en **Retro LCD**-visning. |
 
 Watt beregnes fra **Pack voltage × Current**, uten behov for en egen effektsensor.
 Det er elektrisk tilført effekt. Cellevolt er **Pack voltage ÷ Cells**;
@@ -450,9 +456,9 @@ sine grenser.
 | RPM source | Faktisk mekanisk turtall i **rpm** (ETHOS kan vise **r/m**). Aktivt for målt RPM nederst eller når logging er på. Flyloggen beholder målt RPM også når hovedskjermen viser et estimat. |
 | RPM value | **Measured RPM** eller **KV x volts (est.)**. Aktivt når nedre visning inkluderer RPM. |
 | Motor KV | Motorens KV i rpm/V. Brukes av KV-estimat, **Full-pack KV**-skala og flyloggens KV-potensial. Logging holder feltet aktivt også uten RPM nederst. |
-| Estimate factor | 10–100%, aktivt ved KV-estimert RPM-visning. Standard 100% viser friløpspotensial; velg en lavere faktor bare ut fra målinger av eget motor-/propelloppsett. |
-| RPM scale | **Manual** eller **Full-pack KV**, aktivt for en RPM-måler med **Retro LCD**. Sistnevnte gir fast fulladet skala ut fra batteritype, celletall og KV. |
-| RPM max | Manuell skalagrense i rpm. Tilgjengelig som reservegrense dersom **Full-pack KV** mangler gyldig KV-verdi. Aktivt bare for den aktuelle RPM-skalaen i **Retro LCD**. |
+| Estimate factor (Advanced settings) | 10–100%, aktivt ved KV-estimert RPM-visning. Standard 100% viser friløpspotensial; velg en lavere faktor bare ut fra målinger av eget motor-/propelloppsett. |
+| RPM scale (Advanced settings) | **Manual** eller **Full-pack KV**, aktivt for en RPM-måler med **Retro LCD**. Sistnevnte gir fast fulladet skala ut fra batteritype, celletall og KV. |
+| RPM max (Advanced settings) | Manuell skalagrense i rpm. Tilgjengelig som reservegrense dersom **Full-pack KV** mangler gyldig KV-verdi. Aktivt bare for den aktuelle RPM-skalaen i **Retro LCD**. |
 
 KV × aktuell pakkespenning beregner et elektrisk turtallspotensial.
 Det måler ikke akselturtallet. Visningen er merket **RPM ESTIMATE**.
@@ -473,16 +479,16 @@ korreksjonen.
 | Arm switch | Motorens faktiske arm-bryter eller logiske betingelse. Kreves for logging. Sperrer ikke batterikontrollen ved **Consumed mAh**. Med **% sensor** eller **Voltage estimate** krever resetsperren for valgfri gjenværende mAh fortsatt en gyldig faktisk ARM AV-indikasjon ved godkjenning, også når logging er av. |
 | Throttle source | Faktisk gasskontroll/-kanal. Aktivt for diagnostikk også med logging av. |
 | Airborne gate | Valgfri bryter/logisk betingelse som må være PÅ for opptjening av kvalifiseringstid. **---** og **Always on** passerer. Aktivt for diagnostikk. |
-| Throttle low (raw) | Råverdi ved null gass, vist i **Flight diagnostics**. Standard -1024. |
-| Throttle high (raw) | Råverdi ved full gass. Standard 1024; må overstige nedre endepunkt. Begge endepunktene er aktive for diagnostikk. |
-| Flight minimum | Minst opptjent kvalifiseringstid; standard 60 s. Aktivt med logging på. |
-| Throttle gate | Normalisert gassgrense; standard 50%. Aktivt med logging på. |
-| High throttle | Opptjent tid ved/over gassgrensen; standard 5 s. Aktivt med logging på. |
-| Pack loss delay | Sammenhengende bortfall av gyldig, positiv **Pack voltage** før økten avsluttes; standard 10 s, område 3–120 s. Alltid aktivt fordi det også krever ny batterikontroll og tillater ny forbruksavlesning etter batteribortfall. |
+| Throttle low (raw) (Advanced settings) | Råverdi ved null gass, vist i **Flight diagnostics**. Standard -1024. |
+| Throttle high (raw) (Advanced settings) | Råverdi ved full gass. Standard 1024; må overstige nedre endepunkt. Begge endepunktene er aktive for diagnostikk. |
+| Flight minimum (Advanced settings) | Minst opptjent kvalifiseringstid; standard 60 s. Aktivt med logging på. |
+| Throttle gate (Advanced settings) | Normalisert gassgrense; standard 50%. Aktivt med logging på. |
+| High throttle (Advanced settings) | Opptjent tid ved/over gassgrensen; standard 5 s. Aktivt med logging på. |
+| Pack loss delay (Advanced settings) | Sammenhengende bortfall av gyldig, positiv **Pack voltage** før økten avsluttes; standard 10 s, område 3–120 s. Alltid aktivt fordi det også krever ny batterikontroll og tillater ny forbruksavlesning etter batteribortfall. |
 | Auto-open log | Åpner loggen etter en kvalifisert økt. Aktivt med logging på; standard Av. |
-| Extra log delay | Ekstra ventetid etter **Pack loss delay**; standard 5 s, område 0–120 s. Aktivt når logging og automatisk åpning er på. |
-| RF graph 1 | Valgfri RSSI-kilde i **dB** eller VFR-kilde i **%** for graf 1; tomt felt bruker **RF1 source**. Aktivt med logging på. |
-| RF graph 2 | Samme for graf 2; tomt felt bruker **RF2 source**. Aktivt med logging på. |
+| Extra log delay (Advanced settings) | Ekstra ventetid etter **Pack loss delay**; standard 5 s, område 0–120 s. Aktivt når logging og automatisk åpning er på. |
+| RF graph 1 (Advanced settings) | Valgfri RSSI-kilde i **dB** eller VFR-kilde i **%** for graf 1; tomt felt bruker **RF1 source**. Aktivt med logging på. |
+| RF graph 2 (Advanced settings) | Samme for graf 2; tomt felt bruker **RF2 source**. Aktivt med logging på. |
 | Reset counter | Aktivt med logging på. **Reset...** åpner bekreftelse. Dearm og koble fra batteriet lenge nok til at økten avsluttes først. Bekreftelse nullstiller modellens teller og fjerner beholdt logg. |
 
 Les gassendepunktene i **Flight diagnostics**, ikke bare prosentene i
@@ -509,7 +515,7 @@ raskere enn forsinkelsen kan bli oversett.
 
 Siste kvalifiserte logg beholdes etter at modellen slås av og mens neste flyging
 kvalifiseres. En avvist kandidat erstatter den ikke. Flytelleren lagres per modell;
-siste statistikk og grafer forsvinner ved omstart av radioen.
+siste statistikk og grafer forsvinner ved omstart av radioen eller modellbytte.
 
 ### Automatisk åpning av flylogg
 
@@ -559,7 +565,7 @@ flylogging fortsetter hele tiden.
 |---|---|
 | Flight log / Dashboard | Bytter mellom hovedvisning og flylogg. |
 | Reset live peaks | Nullstiller hovedskjermens RPM- og Watt-maksimum. Endrer ikke flyteller eller maksimum i registrert flylogg. |
-| Accept battery counter... | Viser status og eventuelle gjenværende sperrer for [batterikontrollen](#kontroll-før-gjenværende-lading-vises) ved **Consumed mAh**, eller et reset av den valgfrie telleren for gjenværende mAh med en annen metode. Kontroller faktisk lading og sensor før bekreftelse. Den kan ikke omgå avvik over 20 prosentpoeng eller **CHECK CELLS/TYPE** i batterikontrollen. Godkjenning gjenoppretter ikke manglende forbruk, nullstiller ikke sensoren, fyller ikke batteriet og endrer ikke flytellingen. |
+| Accept battery... | Viser status og eventuelle gjenværende sperrer for [batterikontrollen](#kontroll-før-gjenværende-lading-vises) ved **Consumed mAh**, eller et reset av den valgfrie telleren for gjenværende mAh med en annen metode. Kontroller faktisk lading og sensor før bekreftelse. Den kan ikke omgå avvik over 20 prosentpoeng eller **CHECK CELLS/TYPE** i batterikontrollen. Godkjenning gjenoppretter ikke manglende forbruk, nullstiller ikke sensoren, fyller ikke batteriet og endrer ikke flytellingen. |
 | Configure widget | Åpner gruppene ovenfor. |
 | Configure screens | Åpner ETHOS' skjermkonfigurasjon. |
 
