@@ -39,6 +39,23 @@ function FormLifecycle.buildModel(owner, identity)
     if owner._deckFormBuilding and owner._deckFormReleases then return owner._deckFormModel end
     return identity()
 end
+-- ETHOS can keep menu and dialog functions after they close. Under the small loader
+-- they become relays that let go of this file when it is released. Menu rows reuse
+-- one relay per position; each dialog button gets its own and closes once released.
+function FormLifecycle.relay(list, menu)
+    local relay = FormLifecycle.loader and FormLifecycle.loader.relay
+    if type(relay) == "function" and type(list) == "table" then
+        for index, item in ipairs(list) do
+            if menu then item[2] = relay(item[2], nil, index)
+            else item.action = relay(item.action, true) end
+        end
+    end
+    return list
+end
+function FormLifecycle.openDialog(options)
+    FormLifecycle.relay(options.buttons)
+    return form.openDialog(options)
+end
 function FormLifecycle.configure(owner, build, valid)
     if not valid(owner) then return end
     FormLifecycle.release(owner)
@@ -385,7 +402,7 @@ function SensorSetup.add(owner, panel, rows, current, sourceFor, apply, consumpt
             seen[member]=true
         end
         pending=selections
-        form.openDialog({title="Use sensor suggestions?",message=string.format(
+        FormLifecycle.openDialog({title="Use sensor suggestions?",message=string.format(
             "Save %d selected sources. %s",#selections,methodMessage
                 or "Unavailable sources are replaced only if you chose a replacement."),
             buttons={{label="Cancel",action=function() pending=nil;return true end},
@@ -460,7 +477,7 @@ function SensorSetup.add(owner, panel, rows, current, sourceFor, apply, consumpt
     end)
 end
 local RenderLCD = lcd
-local VERSION = "2026.11-v2"
+local VERSION = "2026.11-v3"
 local MAX_IMAGE_PIXELS = 160000
 local BITMAP_RESERVE = 65536
 local FLIGHT_SESSION
@@ -2551,7 +2568,7 @@ local function wakeup(widget)
         if validPoll(widget) and not widget.preview and currentKey == pending.key
             and widget.configGeneration == pending.generation
             and widget.packCheckState == pending.check then
-            form.openDialog({title = "Battery not accepted", message = pending.message,
+            FormLifecycle.openDialog({title = "Battery not accepted", message = pending.message,
                 buttons = {{label = "Close", action = function() return true end}}})
         end
     end
@@ -3650,11 +3667,11 @@ local function confirmBatteryCounter(widget)
         if state.requiresCounterAcceptance then message = "Consumption counter decreased. " .. message end
     end
     if title then
-        form.openDialog({title = title, message = message,
+        FormLifecycle.openDialog({title = title, message = message,
             buttons = {{label = "Close", action = function() return true end}}})
         return
     end
-    form.openDialog({title = "Accept battery?", message = message,
+    FormLifecycle.openDialog({title = "Accept battery?", message = message,
         buttons = {{label = "Cancel", action = function() return true end},
             {label = "Confirm", action = function()
                 if not sameBatterySetup(widget, setup) then return true end
@@ -3949,12 +3966,12 @@ local function configureFields(widget)
         local armed = switchOn(armSource)
         if not currentForm() or not logging() or widget.flightSession ~= session or widget.armSource ~= armSource then return end
         if not session or session.current or armed then
-            form.openDialog({title = "Flight counter", message = "Enable log, disarm and disconnect pack before reset.",
+            FormLifecycle.openDialog({title = "Flight counter", message = "Enable log, disarm and disconnect pack before reset.",
                 buttons = {{label = "OK", action = function() return true end}}})
             return
         end
         local key = session.key
-        form.openDialog({title = "Reset flight count?", message = widget.data.modelName or "Current model",
+        FormLifecycle.openDialog({title = "Reset flight count?", message = widget.data.modelName or "Current model",
             buttons = {{label = "Cancel", action = function() return true end},
                 {label = "Reset", action = function()
                     if not currentForm() or not logging() or widget.flightSession ~= session then return true end
@@ -4032,7 +4049,7 @@ local function menu(widget)
             return action(...)
         end
     end
-    return rows
+    return FormLifecycle.relay(rows, true)
 end
 
 -- The small loader calls this only after the last VoltDeck widget is destroyed,

@@ -7,7 +7,7 @@
 **Før installasjon:** ta backup av ETHOS-modellen og `/scripts/vc3*.cfg`-parene. Les
 [VD8 backup og tilbakeføring](#vd8-backup-og-tilbakeføring); v10 kan ikke lese innstillinger lagret som VD8.
 
-Bruk [pakken VoltDeck-2026.11-v2.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip).
+Bruk [pakken VoltDeck-2026.11-v3.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v3/VoltDeck-2026.11-v3.zip).
 Samme ZIP brukes til begge installasjonsmåtene:
 
 - **FrSky Suite:** Koble til radioen, åpne **Lua library**, velg **Install Lua scripts**, velg ZIP-filen og trykk **Install scripts**.
@@ -15,7 +15,7 @@ Samme ZIP brukes til begge installasjonsmåtene:
 
 Start ETHOS på nytt etter installasjonen. Ved første installasjon velger du
 **VoltDeck** i et fullskjerms widgetfelt. Åpne **Configure widget** fra widgetmenyen
-og kontroller versjonen øverst. Suite viser denne versjonen som **26.11.2**.
+og kontroller versjonen øverst. Suite viser denne versjonen som **26.11.3**.
 Hvis installasjonen ikke vises oppdatert i Suite, gå ut av og inn i **Lua library**.
 Viser widgeten fortsatt en eldre versjon etter omstart, koble til radioen igjen,
 fjern bare `/scripts/VoltDeck/main.luac` og start ETHOS på nytt.
@@ -28,7 +28,7 @@ Se [oppgradering og tilbakeføring](Konfigurasjon-norsk.md#vd8-backup-og-tilbake
 
 ## VD8 backup og tilbakeføring
 
-2026.11-v2 beholder VD8-formatet fra v11. Fremgangsmåten nedenfor gjelder fortsatt ved tilbakeføring til v10.
+2026.11-v3 beholder VD8-formatet fra v11. Fremgangsmåten nedenfor gjelder fortsatt ved tilbakeføring til v10.
 
 Før installasjon eller første start av v11: ta backup av **ETHOS-modellen** og kopier
 alle eksisterende **`/scripts/vc3*.cfg`-filer** til datamaskinen. Behold også en fullstendig

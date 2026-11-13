@@ -1,9 +1,9 @@
 # VoltDeck
 A full-screen battery, telemetry and power dashboard for FrSky ETHOS 1.6.6 and 26.1.2.
 
-**VoltDeck 2026.11-v2: latest release.**
+**VoltDeck 2026.11-v3: latest release.**
 
-[Download VoltDeck-2026.11-v2.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v2)
+[Download VoltDeck-2026.11-v3.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v3/VoltDeck-2026.11-v3.zip) | [Release notes](https://github.com/bliatun-code/VoltDeck/releases/tag/voltdeck-2026.11-v3)
 
 <table>
 <tr>
@@ -77,7 +77,7 @@ Discover the sensors in ETHOS, then open **Configure widget → Sensor setup →
 
 ## Install VoltDeck
 
-Download [VoltDeck-2026.11-v2.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
+Download [VoltDeck-2026.11-v3.zip](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v3/VoltDeck-2026.11-v3.zip) from the release assets, not GitHub's automatically generated source archive. The same ZIP supports both methods:
 
 - **FrSky Suite:** Connect the radio, open **Lua library**, choose **Install Lua scripts**, select the ZIP and click **Install scripts**.
 - **Manual:** Extract the ZIP, create `/scripts/VoltDeck/` on the radio's script drive and copy all six extracted files into it. `main.lua` only loads `deck.lua`; both files are required.
@@ -86,7 +86,7 @@ Restart ETHOS after installation.
 On first installation, select **VoltDeck** in a full-screen widget area and follow the
 [illustrated guide](docs/Configuration.md) for your model's sources and battery settings.
 Open **Configure widget** from the widget menu and check the version at the top.
-Suite displays this release as **26.11.2**.
+Suite displays this release as **26.11.3**.
 If Suite's installed entry has not refreshed, leave and reopen **Lua library**.
 If the widget still shows an older version after restarting, follow the
 [installation troubleshooting](docs/VoltDeck.md#installation).

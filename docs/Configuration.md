@@ -7,10 +7,10 @@
 **Before installation:** back up the ETHOS model and `/scripts/vc3*.cfg` pairs. Read
 [VD8 backup and rollback](#vd8-backup-and-rollback); v10 cannot read settings saved as VD8.
 
-In **FrSky Suite > Lua library > Install Lua scripts**, select **VoltDeck-2026.11-v2.zip** from the [release package](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v2/VoltDeck-2026.11-v2.zip) and
+In **FrSky Suite > Lua library > Install Lua scripts**, select **VoltDeck-2026.11-v3.zip** from the [release package](https://github.com/bliatun-code/VoltDeck/releases/download/voltdeck-2026.11-v3/VoltDeck-2026.11-v3.zip) and
 click **Install scripts**. The same ZIP supports manual installation into `/scripts/VoltDeck/`.
 Follow the [installation steps](../README.md#install-voltdeck), restart ETHOS and check
-the version at the top of **Configure widget**. Suite displays this release as **26.11.2**.
+the version at the top of **Configure widget**. Suite displays this release as **26.11.3**.
 Keep the configured widget and existing cfg/dat files when updating.
 
 **Full screen:** The widget area must fill the radio's complete LCD, including on radios with a lower resolution. A split area shows **Full screen required**; choose a full-screen area to restore the instruments. **Screen size unavailable** means the LCD dimensions could not be read; the app retries automatically. Selected sources and settings are retained.
@@ -19,7 +19,7 @@ See [upgrading and rollback](Configuration.md#vd8-backup-and-rollback) before re
 
 ## VD8 backup and rollback
 
-2026.11-v2 keeps the VD8 format introduced in v11. The rollback steps below still apply when returning to v10.
+2026.11-v3 keeps the VD8 format introduced in v11. The rollback steps below still apply when returning to v10.
 
 Before installing or starting v11, back up the **ETHOS model** and copy all existing
 **`/scripts/vc3*.cfg` files** to the computer. Retain a complete before-install file list as well
