@@ -122,11 +122,17 @@ Choose **Display style = Deck** for the upright batteries and familiar instrumen
 
 Changing style or image does not change calculation methods, telemetry sources, units, alerts, acceptance or flight logging. Inactive fields retain their saved values.
 
-Use an ordinary **8-bit RGB or RGBA PNG**. **290 × 191** fits the picture area;
-**480 × 272** and **480 × 320** are also supported. Aspect ratio is preserved.
-The limit is 160,000 pixels, so **800 × 480** is too large. Indexed/palette and
-16-bit-channel PNGs are unsupported. Transparency lets the chosen background
-show through.
+The picture can be a BMP file from FrSky Suite's Image manager or an ordinary
+**8-bit RGB or RGBA PNG**. The limit is 160,000 pixels. In Image manager, set
+**Output size** to **480 × 320** or **480 × 272**. The **800 × 480** size, which
+may be marked Recommended there, is over the limit, and the picture area then
+shows "Max 160k pixels; try 290x191".
+
+**290 × 191** fits the picture area exactly; a larger picture does not look
+sharper. Aspect ratio is preserved. To keep an 800 × 480 picture as the model
+picture in ETHOS, save a smaller copy and select it with
+**Image source = Image file**. Indexed/palette and 16-bit-channel PNGs are
+unsupported. Transparency lets the chosen background show through.
 
 The example [Ultimate AMR artwork](images/ultimate-amr.png) is 290 × 191;
 see [NOTICE](../NOTICE.md) for its terms.

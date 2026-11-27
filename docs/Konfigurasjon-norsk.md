@@ -131,11 +131,17 @@ Velg **Display style = Deck** for de stående batteriene og den kjente instrumen
 
 Stil- og bildevalg endrer ikke beregningsmetoder, telemetrikilder, enheter, varsler, godkjenning eller flylogg. Grå felt beholder sine lagrede verdier.
 
-Bruk vanlig **8-bit RGB eller RGBA PNG**. **290 × 191** passer bildefeltet;
-**480 × 272** og **480 × 320** støttes også. Sideforholdet beholdes.
-Grensen er 160 000 piksler, så **800 × 480** er for stort. Indekserte/palettbilder
-og PNG med 16-bit fargekanaler støttes ikke. Gjennomsiktighet lar bakgrunnen
-synes gjennom.
+Bildet kan være en BMP-fil fra Image manager i FrSky Suite eller en vanlig
+**8-bit RGB- eller RGBA-PNG**. Grensen er 160 000 piksler. Velg **480 × 320**
+eller **480 × 272** under **Output size** i Image manager. Størrelsen
+**800 × 480**, som kan være merket Recommended der, er over grensen, og
+bildefeltet viser da «Max 160k pixels; try 290x191».
+
+**290 × 191** fyller bildefeltet nøyaktig; et større bilde blir ikke skarpere.
+Sideforholdet beholdes. Vil du beholde et bilde på 800 × 480 som modellbilde i
+ETHOS, lagrer du en mindre kopi og velger den med
+**Image source = Image file**. Indekserte/palettbilder og PNG med 16-bit
+fargekanaler støttes ikke. Gjennomsiktighet lar bakgrunnen synes gjennom.
 
 Eksempelbildet [Ultimate AMR](images/ultimate-amr.png) er 290 × 191;
 se [NOTICE](../NOTICE.md) for bruksvilkår.

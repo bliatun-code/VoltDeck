@@ -143,8 +143,9 @@ Runtime images are chosen by the user; none are required by the widget.
 The Ultimate AMR picture is optional example artwork. See [NOTICE](../NOTICE.md)
 for its terms of use.
 290 x 191 pixels is the widget's preferred image size. The aspect ratio is
-preserved. Large image dimensions can use too much radio memory even when
-the PNG file is small.
+preserved. A picture can have at most 160,000 pixels: in FrSky Suite's Image
+manager, set Output size to 480 x 320 or 480 x 272, not the 800 x 480 that may
+be marked Recommended. See [Appearance](Configuration.md#1-appearance) for the formats.
 
 ## Flight log limitations
 
